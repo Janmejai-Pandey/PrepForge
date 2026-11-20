@@ -1,0 +1,7 @@
+# Database Configuration Template for PrepForge
+# Copy this file to 'db.properties' and fill in your actual MySQL credentials.
+# NOTE: 'db.properties' is gitignored and will never be committed to Git.
+
+db.url=jdbc:mysql://localhost:3306/prepforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+db.user=root
+db.password=rootpassword
