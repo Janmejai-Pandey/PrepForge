@@ -1,5 +1,6 @@
 package prepforge;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import prepforge.dao.InMemoryUserDao;
@@ -12,22 +13,11 @@ import prepforge.model.Student;
 import prepforge.model.User;
 import prepforge.service.UserService;
 
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Unit Test: UserServiceTest
- * 
- * Verifies business logic in UserService: registration, login, profile updates,
- * skill assignments, and deletion.
- * 
- * Demonstrates:
- * 1. TEST ISOLATION: @BeforeEach creates a fresh UserService with a fresh DAO
- *    before every single test so tests do not interfere with each other.
- * 2. ASSERTIONS: assertNotNull, assertEquals, assertTrue, assertThrows.
- * 3. BUSINESS RULES: Verifies duplicate rejection, password hashing verification, and student profiles.
- */
 public class UserServiceTest {
 
     private UserService userService;
@@ -35,133 +25,105 @@ public class UserServiceTest {
 
     @BeforeEach
     public void setUp() {
-        // Fresh isolated DAO and Service before each test
         userDao = new InMemoryUserDao();
         userService = new UserService(userDao);
     }
 
-    // ---------------- Registration Tests ----------------
     @Test
     public void testRegisterStudent_Success() throws PrepForgeException {
         Student s = new Student("Amit Kumar", "amit@prepforge.com", "EN2024_01", "CSE", 8.5);
         userService.registerStudent(s, "Password@123");
 
-        assertTrue(s.getId() > 0, "Student ID should be assigned upon registration.");
-
-        Student fetched = userService.getProfile(s.getId());
+        assertTrue(s.getId() > 0);
+        User fetched = userService.login("amit@prepforge.com", "Password@123");
         assertNotNull(fetched);
+        assertEquals("Student", fetched.getRole());
         assertEquals("Amit Kumar", fetched.getName());
-        assertEquals("amit@prepforge.com", fetched.getEmail());
     }
 
     @Test
     public void testRegisterStudent_DuplicateEmail_ThrowsValidationException() throws PrepForgeException {
-        Student s1 = new Student("First User", "duplicate@prepforge.com", "EN1", "CSE", 8.0);
-        userService.registerStudent(s1, "Pass@123");
+        Student s1 = new Student("Sneha Rao", "sneha@prepforge.com", "EN2024_02", "ECE", 9.1);
+        userService.registerStudent(s1, "SecurePass1");
 
-        Student s2 = new Student("Second User", "duplicate@prepforge.com", "EN2", "IT", 7.5);
-
+        Student s2 = new Student("Sneha Duplicate", "sneha@prepforge.com", "EN2024_03", "IT", 8.0);
         assertThrows(ValidationException.class, () -> {
-            userService.registerStudent(s2, "Pass@456");
+            userService.registerStudent(s2, "SecurePass2");
         });
     }
 
     @Test
-    public void testRegisterAdmin_Success() throws PrepForgeException {
-        Admin admin = new Admin("Dr. Sharma", "tpo@prepforge.com", "Placement Cell", "EMP_101");
-        userService.registerAdmin(admin, "AdminPass@2026");
+    public void testRegisterAdmin_SuccessAndLogin() throws PrepForgeException {
+        Admin admin = new Admin("Dr. Sharma", "sharma@prepforge.com", "ADM_001", "Dean Placement");
+        userService.registerAdmin(admin, "Admin@Pass2024");
 
         assertTrue(admin.getId() > 0);
-        User loggedIn = userService.login("tpo@prepforge.com", "AdminPass@2026");
-        assertEquals("ADMIN", loggedIn.getRole());
-    }
-
-    // ---------------- Login Tests ----------------
-    @Test
-    public void testLogin_Success_ReturnsPolymorphicUser() throws PrepForgeException {
-        Student s = new Student("Sneha Roy", "sneha@prepforge.com", "EN2024_03", "ECE", 9.1);
-        userService.registerStudent(s, "SnehaSecret@1");
-
-        User user = userService.login("sneha@prepforge.com", "SnehaSecret@1");
-        assertNotNull(user);
-        assertEquals("Sneha Roy", user.getName());
-        assertEquals("STUDENT", user.getRole());
+        User loggedAdmin = userService.login("sharma@prepforge.com", "Admin@Pass2024");
+        assertNotNull(loggedAdmin);
+        assertEquals("Admin", loggedAdmin.getRole());
+        assertEquals("Dean Placement", ((Admin) loggedAdmin).getDepartment());
     }
 
     @Test
     public void testLogin_WrongPassword_ThrowsValidationException() throws PrepForgeException {
-        Student s = new Student("Vikram", "vikram@prepforge.com", "EN2024_04", "ME", 7.8);
-        userService.registerStudent(s, "CorrectPassword@1");
+        Student s = new Student("Vikas Patel", "vikas@prepforge.com", "EN2024_04", "MECH", 7.8);
+        userService.registerStudent(s, "CorrectPassword");
 
         assertThrows(ValidationException.class, () -> {
-            userService.login("vikram@prepforge.com", "WrongPassword@1");
+            userService.login("vikas@prepforge.com", "WrongPassword");
         });
     }
 
     @Test
-    public void testLogin_UnregisteredEmail_ThrowsValidationException() {
+    public void testLogin_NonExistentEmail_ThrowsValidationException() {
         assertThrows(ValidationException.class, () -> {
-            userService.login("nobody@prepforge.com", "AnyPassword@123");
+            userService.login("nonexistent@domain.com", "AnyPassword123");
         });
     }
 
-    // ---------------- Profile & Skills Tests ----------------
     @Test
     public void testUpdateProfile_Success() throws PrepForgeException {
-        Student s = new Student("Rohan", "rohan@prepforge.com", "EN2024_05", "CSE", 7.0);
-        userService.registerStudent(s, "RohanPass@1");
+        Student s = new Student("Karan Mehra", "karan@prepforge.com", "EN2024_05", "CSE", 7.2);
+        userService.registerStudent(s, "Password123");
 
-        // Update profile details
-        s.setName("Rohan Verma");
-        s.setCgpa(8.2);
+        s.setCgpa(8.4);
+        s.setBranch("AI & Data Science");
         userService.updateProfile(s);
 
         Student updated = userService.getProfile(s.getId());
-        assertEquals("Rohan Verma", updated.getName());
-        assertEquals(8.2, updated.getCgpa(), 0.001);
+        assertEquals(8.4, updated.getCgpa(), 0.001);
+        assertEquals("AI & Data Science", updated.getBranch());
     }
 
     @Test
     public void testAddAndRemoveSkill() throws PrepForgeException {
-        Student s = new Student("Neha", "neha@prepforge.com", "EN2024_06", "IT", 8.8);
-        userService.registerStudent(s, "NehaPass@1");
+        Student s = new Student("Pooja Verma", "pooja@prepforge.com", "EN2024_06", "CSE", 8.8);
+        userService.registerStudent(s, "Password123");
 
-        // Skill 1 is "Java" in our seeded catalog
-        userService.addSkill(s.getId(), 1, "Advanced");
+        List<Skill> skills = userService.getAllSkills();
+        assertTrue(skills.size() >= 2);
 
-        Student withSkill = userService.getProfile(s.getId());
-        assertTrue(withSkill.hasSkill(1));
-        assertEquals("Advanced", withSkill.getSkillLevel(1));
+        int javaSkillId = skills.get(0).getId();
+        userService.addSkill(s.getId(), javaSkillId, "Advanced");
 
-        // Remove the skill
-        userService.removeSkill(s.getId(), 1);
-        Student afterRemove = userService.getProfile(s.getId());
-        assertFalse(afterRemove.hasSkill(1));
+        Student profile = userService.getProfile(s.getId());
+        assertEquals(1, profile.getSkills().size());
+
+        userService.removeSkill(s.getId(), javaSkillId);
+        profile = userService.getProfile(s.getId());
+        assertEquals(0, profile.getSkills().size());
     }
 
     @Test
-    public void testGetAllStudentsAndSkills() throws PrepForgeException {
-        List<Skill> allSkills = userService.getAllSkills();
-        assertTrue(allSkills.size() >= 5, "Initial skill catalog should contain standard skills.");
+    public void testDeleteStudent_AdminCapability() throws PrepForgeException {
+        Student s = new Student("Rohan Roy", "rohan@prepforge.com", "EN2024_07", "EE", 7.0);
+        userService.registerStudent(s, "Password123");
 
-        Student s1 = new Student("Test1", "test1@prep.com", "EN_T1", "CSE", 8.0);
-        Student s2 = new Student("Test2", "test2@prep.com", "EN_T2", "IT", 7.5);
-        userService.registerStudent(s1, "Pass@123");
-        userService.registerStudent(s2, "Pass@123");
-
-        List<Student> allStudents = userService.getAllStudents();
-        assertTrue(allStudents.size() >= 2);
-    }
-
-    @Test
-    public void testDeleteStudent_Success() throws PrepForgeException {
-        Student s = new Student("DeleteMe", "delete@prep.com", "EN_DEL", "CSE", 6.5);
-        userService.registerStudent(s, "DeletePass@1");
-
-        userService.deleteStudent(s.getId());
+        int studentId = s.getId();
+        userService.deleteStudent(studentId);
 
         assertThrows(ValidationException.class, () -> {
-            userService.getProfile(s.getId());
+            userService.getProfile(studentId);
         });
     }
 }

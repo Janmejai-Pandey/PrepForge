@@ -1,5 +1,9 @@
 package prepforge.ui;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -7,694 +11,460 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import prepforge.Main;
 import prepforge.exception.PrepForgeException;
 import prepforge.model.Company;
-import prepforge.model.Interview;
 import prepforge.model.JobRole;
-import prepforge.model.Result;
 import prepforge.model.Skill;
 import prepforge.model.Student;
-import prepforge.service.AnalyticsService;
-import prepforge.service.InterviewService;
 import prepforge.service.PlacementService;
 import prepforge.service.UserService;
 
-import java.util.List;
-import java.util.Map;
-
-/**
- * UI Screen: StudentScreen
- * 
- * Contract Owner: Member 4 (UI & Integration)
- * 
- * Provides the central dashboard for students containing all 5 contract tabs:
- * 1. Profile and Skills
- * 2. Start Interview
- * 3. History
- * 4. Recommendations
- * 5. Companies with Eligibility
- */
 public class StudentScreen {
 
     private final Main mainApp;
     private final Student student;
     private final UserService userService;
     private final PlacementService placementService;
-    private final InterviewService interviewService;
-    private final AnalyticsService analyticsService;
 
-    // Table references for dynamic reloading
     private TableView<SkillRow> skillsTable;
-    private TableView<Result> historyTable;
     private TableView<RoleRow> companiesTable;
+    private Label cgpaBadge;
 
-    public StudentScreen(Main mainApp, Student student, UserService userService,
-                         PlacementService placementService, InterviewService interviewService,
-                         AnalyticsService analyticsService) {
+    public StudentScreen(Main mainApp, Student student, UserService userService, PlacementService placementService) {
         this.mainApp = mainApp;
         this.student = student;
         this.userService = userService;
         this.placementService = placementService;
-        this.interviewService = interviewService;
-        this.analyticsService = analyticsService;
     }
 
     public Parent createView() {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #f8fafc;");
 
-        // ---------------- Top Navigation Bar ----------------
-        HBox topBar = new HBox(15);
+        HBox topBar = new HBox(20);
+        topBar.setPadding(new Insets(16, 28, 16, 28));
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(16, 24, 16, 24));
-        topBar.setStyle("-fx-background-color: #1e293b;");
+        topBar.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;");
 
-        Label logo = new Label("PrepForge");
-        logo.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
-        logo.setTextFill(Color.WHITE);
+        Label brand = new Label("PrepForge");
+        brand.setFont(Font.font("SansSerif", FontWeight.BOLD, 20));
+        brand.setTextFill(Color.web("#1e40af"));
 
-        Label subtitle = new Label("Student Portal");
-        subtitle.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 3 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;");
+        Label separator = new Label("|");
+        separator.setTextFill(Color.web("#cbd5e1"));
+
+        Label welcome = new Label("Student Portal — " + student.getName() + " (" + student.getBranch() + ")");
+        welcome.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 14));
+        welcome.setTextFill(Color.web("#334155"));
+
+        cgpaBadge = new Label("CGPA: " + String.format("%.2f", student.getCgpa()));
+        cgpaBadge.setStyle("-fx-background-color: #dbeafe; -fx-text-fill: #1e40af; -fx-padding: 4 10; -fx-background-radius: 12; -fx-font-weight: bold;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label welcomeLabel = new Label("Welcome, " + student.getName() + " (" + student.getBranch() + " | CGPA: " + student.getCgpa() + ")");
-        welcomeLabel.setTextFill(Color.web("#cbd5e1"));
-        welcomeLabel.setFont(Font.font("SansSerif", FontWeight.NORMAL, 14));
-
-        Button logoutBtn = new Button("Logout");
-        logoutBtn.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 6 14; -fx-cursor: hand;");
+        Button logoutBtn = new Button("Sign Out");
+        logoutBtn.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
         logoutBtn.setOnAction(e -> mainApp.logout());
 
-        topBar.getChildren().addAll(logo, subtitle, spacer, welcomeLabel, logoutBtn);
+        topBar.getChildren().addAll(brand, separator, welcome, cgpaBadge, spacer, logoutBtn);
         root.setTop(topBar);
 
-        // ---------------- Center TabPane (5 Contract Tabs) ----------------
         TabPane tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        Tab tab1 = new Tab("Profile & Skills", createProfileSkillsTab());
-        Tab tab2 = new Tab("Start Interview", createStartInterviewTab());
-        Tab tab3 = new Tab("Interview History", createHistoryTab());
-        Tab tab4 = new Tab("Recommendations & Analytics", createRecommendationsTab());
-        Tab tab5 = new Tab("Companies & Eligibility", createCompaniesTab());
+        Tab profileTab = new Tab("Profile & Skills", buildProfileAndSkillsTab());
+        Tab placementTab = new Tab("Companies & Placement Eligibility", buildCompaniesTab());
 
-        tabPane.getTabs().addAll(tab1, tab2, tab3, tab4, tab5);
+        tabPane.getTabs().addAll(profileTab, placementTab);
         root.setCenter(tabPane);
+
+        loadSkillsData();
+        loadCompaniesData();
 
         return root;
     }
 
-    // =========================================================================
-    // TAB 1: Profile & Skills
-    // =========================================================================
-    private Parent createProfileSkillsTab() {
-        HBox box = new HBox(24);
-        box.setPadding(new Insets(24));
-        box.setAlignment(Pos.TOP_LEFT);
+    private Parent buildProfileAndSkillsTab() {
+        HBox container = new HBox(24);
+        container.setPadding(new Insets(24));
 
-        // Left Card: Academic Profile
-        VBox profileCard = new VBox(14);
+        VBox profileCard = new VBox(16);
         profileCard.setPrefWidth(380);
         profileCard.setPadding(new Insets(20));
-        styleCard(profileCard);
+        profileCard.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8;");
 
-        Label cardTitle = new Label("Academic Profile");
-        cardTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
-        cardTitle.setStyle("-fx-text-fill: #1e293b;");
+        Label cardTitle = new Label("Student Academic Profile");
+        cardTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 16));
+        cardTitle.setTextFill(Color.web("#0f172a"));
 
-        TextField nameTf = new TextField(student.getName());
-        TextField emailTf = new TextField(student.getEmail());
-        TextField enrollTf = new TextField(student.getEnrollmentNumber() != null ? student.getEnrollmentNumber() : "");
-        TextField branchTf = new TextField(student.getBranch() != null ? student.getBranch() : "");
-        TextField cgpaTf = new TextField(String.valueOf(student.getCgpa()));
+        TextField nameField = new TextField(student.getName());
+        TextField emailField = new TextField(student.getEmail());
+        emailField.setDisable(true);
+        TextField enrollField = new TextField(student.getEnrollmentNumber());
+        enrollField.setDisable(true);
+        TextField branchField = new TextField(student.getBranch());
+        TextField cgpaField = new TextField(String.valueOf(student.getCgpa()));
 
-        Button saveProfileBtn = new Button("Update Academic Profile");
-        stylePrimaryButton(saveProfileBtn);
+        Button updateBtn = new Button("Save Profile Changes");
+        updateBtn.setMaxWidth(Double.MAX_VALUE);
+        updateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 0;");
 
-        saveProfileBtn.setOnAction(e -> {
+        updateBtn.setOnAction(e -> {
             try {
-                student.setName(nameTf.getText().trim());
-                student.setEmail(emailTf.getText().trim());
-                student.setEnrollmentNumber(enrollTf.getText().trim());
-                student.setBranch(branchTf.getText().trim());
-                student.setCgpa(Double.parseDouble(cgpaTf.getText().trim()));
+                double newCgpa = Double.parseDouble(cgpaField.getText().trim());
+                student.setName(nameField.getText().trim());
+                student.setBranch(branchField.getText().trim());
+                student.setCgpa(newCgpa);
 
-                Task<Void> updateTask = new Task<>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        userService.updateProfile(student);
-                        return null;
-                    }
-                };
-                updateTask.setOnSucceeded(ev -> Main.showSuccessAlert("Profile Updated", "Your academic profile has been saved successfully."));
-                updateTask.setOnFailed(ev -> Main.showErrorAlert("Update Failed", updateTask.getException().getMessage()));
-                new Thread(updateTask).start();
-            } catch (NumberFormatException nfe) {
-                Main.showErrorAlert("Invalid Input", "CGPA must be a valid number (e.g. 8.5).");
+                userService.updateProfile(student);
+                cgpaBadge.setText("CGPA: " + String.format("%.2f", newCgpa));
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Profile Updated", "Your profile details have been saved.");
+                loadCompaniesData();
+            } catch (NumberFormatException ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Invalid Input", "CGPA must be a valid numeric decimal (e.g. 8.5).");
+            } catch (PrepForgeException ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Update Failed", ex.getMessage());
             }
         });
 
         profileCard.getChildren().addAll(
                 cardTitle,
-                new Label("Full Name:"), nameTf,
-                new Label("Email:"), emailTf,
-                new Label("Enrollment Number:"), enrollTf,
-                new Label("Academic Branch:"), branchTf,
-                new Label("Current CGPA:"), cgpaTf,
-                saveProfileBtn
+                new Label("Full Name:"), nameField,
+                new Label("Registered Email:"), emailField,
+                new Label("Enrollment Number:"), enrollField,
+                new Label("Branch / Department:"), branchField,
+                new Label("Cumulative GPA (CGPA):"), cgpaField,
+                updateBtn
         );
 
-        // Right Card: Skills Management
-        VBox skillsCard = new VBox(14);
-        HBox.setHgrow(skillsCard, Priority.ALWAYS);
-        skillsCard.setPadding(new Insets(20));
-        styleCard(skillsCard);
+        VBox skillsSection = new VBox(16);
+        HBox.setHgrow(skillsSection, Priority.ALWAYS);
+        skillsSection.setPadding(new Insets(20));
+        skillsSection.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8;");
 
-        Label skillsTitle = new Label("Acquired Skills & Proficiency Levels");
-        skillsTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        Label skillsTitle = new Label("Verified Skills & Proficiencies");
+        skillsTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 16));
+        skillsTitle.setTextFill(Color.web("#0f172a"));
 
         skillsTable = new TableView<>();
-        TableColumn<SkillRow, String> skillCol = new TableColumn<>("Skill");
-        skillCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().name));
-        skillCol.setPrefWidth(200);
+        skillsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<SkillRow, String> catCol = new TableColumn<>("Category");
-        catCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().category));
-        catCol.setPrefWidth(160);
+        TableColumn<SkillRow, String> skillNameCol = new TableColumn<>("Skill");
+        skillNameCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getName()));
+
+        TableColumn<SkillRow, String> categoryCol = new TableColumn<>("Category");
+        categoryCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCategory()));
 
         TableColumn<SkillRow, String> levelCol = new TableColumn<>("Proficiency Level");
-        levelCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().level));
-        levelCol.setPrefWidth(150);
+        levelCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLevel()));
 
-        skillsTable.getColumns().addAll(skillCol, catCol, levelCol);
-        loadStudentSkills();
+        skillsTable.getColumns().addAll(skillNameCol, categoryCol, levelCol);
+        VBox.setVgrow(skillsTable, Priority.ALWAYS);
 
-        // Add Skill Controls
-        HBox addBox = new HBox(10);
-        addBox.setAlignment(Pos.CENTER_LEFT);
+        HBox addSkillBox = new HBox(12);
+        addSkillBox.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<Skill> skillDropdown = new ComboBox<>();
-        skillDropdown.setPromptText("Select Skill to Add");
-        try {
-            skillDropdown.setItems(FXCollections.observableArrayList(userService.getAllSkills()));
-        } catch (Exception ex) {
-            // Non-critical fallback
-        }
+        skillDropdown.setPromptText("Select a skill to add");
+        skillDropdown.setPrefWidth(220);
 
         ComboBox<String> levelDropdown = new ComboBox<>();
-        levelDropdown.getItems().addAll("Beginner", "Intermediate", "Advanced");
+        levelDropdown.getItems().addAll("Beginner", "Intermediate", "Advanced", "Expert");
         levelDropdown.setValue("Intermediate");
 
         Button addSkillBtn = new Button("Add Skill");
-        stylePrimaryButton(addSkillBtn);
+        addSkillBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
 
         Button removeSkillBtn = new Button("Remove Selected");
-        removeSkillBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 16; -fx-cursor: hand;");
+        removeSkillBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+
+        try {
+            List<Skill> catalog = userService.getAllSkills();
+            skillDropdown.setItems(FXCollections.observableArrayList(catalog));
+        } catch (Exception ignored) {
+        }
 
         addSkillBtn.setOnAction(e -> {
             Skill selectedSkill = skillDropdown.getValue();
             String level = levelDropdown.getValue();
             if (selectedSkill == null) {
-                Main.showErrorAlert("Select Skill", "Please select a skill from the dropdown.");
+                mainApp.showAlert(Alert.AlertType.WARNING, "Selection Required", "Please select a skill from the dropdown.");
                 return;
             }
 
             Task<Void> task = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    userService.addSkill(student.getId(), selectedSkill.getSkillId(), level);
-                    student.addSkill(selectedSkill, level);
+                    userService.addSkill(student.getId(), selectedSkill.getId(), level);
                     return null;
                 }
             };
-            task.setOnSucceeded(ev -> {
-                loadStudentSkills();
-                Main.showSuccessAlert("Skill Added", "Skill '" + selectedSkill.getSkillName() + "' has been added to your profile!");
+
+            task.setOnSucceeded(workerStateEvent -> {
+                loadSkillsData();
+                loadCompaniesData();
             });
-            task.setOnFailed(ev -> Main.showErrorAlert("Skill Error", task.getException().getMessage()));
+
+            task.setOnFailed(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Skill Addition Failed", task.getException().getMessage());
+            });
+
             new Thread(task).start();
         });
 
         removeSkillBtn.setOnAction(e -> {
             SkillRow selected = skillsTable.getSelectionModel().getSelectedItem();
             if (selected == null) {
-                Main.showErrorAlert("Select Item", "Please click on a skill row in the table to remove.");
+                mainApp.showAlert(Alert.AlertType.WARNING, "Selection Required", "Please select a skill row in the table to remove.");
                 return;
             }
 
             Task<Void> task = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    userService.removeSkill(student.getId(), selected.id);
-                    student.removeSkill(selected.id);
+                    userService.removeSkill(student.getId(), selected.getSkillId());
                     return null;
                 }
             };
-            task.setOnSucceeded(ev -> loadStudentSkills());
-            task.setOnFailed(ev -> Main.showErrorAlert("Remove Error", task.getException().getMessage()));
-            new Thread(task).start();
-        });
 
-        addBox.getChildren().addAll(skillDropdown, levelDropdown, addSkillBtn, removeSkillBtn);
-        skillsCard.getChildren().addAll(skillsTitle, skillsTable, addBox);
-
-        box.getChildren().addAll(profileCard, skillsCard);
-        return box;
-    }
-
-    private void loadStudentSkills() {
-        if (skillsTable == null) return;
-        List<SkillRow> rows = FXCollections.observableArrayList();
-        for (Skill s : student.getSkills()) {
-            String level = student.getSkillLevel(s.getSkillId());
-            rows.add(new SkillRow(s.getSkillId(), s.getSkillName(), s.getCategory(), level));
-        }
-        skillsTable.setItems(FXCollections.observableArrayList(rows));
-    }
-
-    public static class SkillRow {
-        public int id;
-        public String name;
-        public String category;
-        public String level;
-        public SkillRow(int id, String name, String category, String level) {
-            this.id = id; this.name = name; this.category = category; this.level = level;
-        }
-    }
-
-    // =========================================================================
-    // TAB 2: Start Interview
-    // =========================================================================
-    private Parent createStartInterviewTab() {
-        VBox container = new VBox(20);
-        container.setPadding(new Insets(30, 40, 30, 40));
-        container.setAlignment(Pos.TOP_LEFT);
-
-        VBox card = new VBox(20);
-        card.setPadding(new Insets(30));
-        styleCard(card);
-        card.setMaxWidth(700);
-
-        Label title = new Label("Configure Live Mock Interview");
-        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
-
-        Label desc = new Label("Select the target domain and interview configuration to start your simulated assessment.");
-        desc.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
-
-        // Type selection
-        VBox typeBox = new VBox(8);
-        Label typeLabel = new Label("Interview Type:");
-        typeLabel.setFont(Font.font("SansSerif", FontWeight.BOLD, 13));
-
-        RadioButton technicalRb = new RadioButton("Technical Domain (Data Structures, Algorithms, SQL, Java)");
-        RadioButton hrRb = new RadioButton("HR & Behavioral (Situational & Leadership Competencies)");
-        RadioButton mixedRb = new RadioButton("Comprehensive Mock Interview (Combined Technical + Coding + HR)");
-        mixedRb.setSelected(true);
-
-        ToggleGroup typeGroup = new ToggleGroup();
-        technicalRb.setToggleGroup(typeGroup);
-        hrRb.setToggleGroup(typeGroup);
-        mixedRb.setToggleGroup(typeGroup);
-        typeBox.getChildren().addAll(typeLabel, technicalRb, hrRb, mixedRb);
-
-        // Difficulty selection
-        HBox diffBox = new HBox(16);
-        diffBox.setAlignment(Pos.CENTER_LEFT);
-        Label diffLabel = new Label("Target Difficulty:");
-        ComboBox<String> diffCombo = new ComboBox<>();
-        diffCombo.getItems().addAll("EASY", "MEDIUM", "HARD");
-        diffCombo.setValue("MEDIUM");
-        diffBox.getChildren().addAll(diffLabel, diffCombo);
-
-        // Number of questions
-        HBox numBox = new HBox(16);
-        numBox.setAlignment(Pos.CENTER_LEFT);
-        Label numLabel = new Label("Number of Questions:");
-        ComboBox<Integer> numCombo = new ComboBox<>();
-        numCombo.getItems().addAll(3, 5, 8, 10);
-        numCombo.setValue(5);
-        numBox.getChildren().addAll(numLabel, numCombo);
-
-        Button startBtn = new Button("Launch Live Interview Session →");
-        stylePrimaryButton(startBtn);
-        startBtn.setPrefHeight(45);
-        startBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 24; -fx-background-radius: 6; -fx-cursor: hand;");
-
-        startBtn.setOnAction(e -> {
-            String selectedType = "MIXED";
-            if (technicalRb.isSelected()) selectedType = "TECHNICAL";
-            else if (hrRb.isSelected()) selectedType = "HR";
-
-            String diff = diffCombo.getValue();
-            int numQ = numCombo.getValue();
-
-            String finalType = selectedType;
-            Task<Interview> task = new Task<>() {
-                @Override
-                protected Interview call() throws Exception {
-                    return interviewService.startInterview(student.getId(), finalType, diff, numQ);
-                }
-            };
-
-            task.setOnSucceeded(ev -> {
-                Interview interview = task.getValue();
-                mainApp.showInterviewScreen(student, interview);
+            task.setOnSucceeded(workerStateEvent -> {
+                loadSkillsData();
+                loadCompaniesData();
             });
 
-            task.setOnFailed(ev -> Main.showErrorAlert("Launch Failed", task.getException().getMessage()));
+            task.setOnFailed(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Remove Failed", task.getException().getMessage());
+            });
+
             new Thread(task).start();
         });
 
-        card.getChildren().addAll(title, desc, typeBox, diffBox, numBox, startBtn);
-        container.getChildren().add(card);
+        addSkillBox.getChildren().addAll(skillDropdown, levelDropdown, addSkillBtn, removeSkillBtn);
+        skillsSection.getChildren().addAll(skillsTitle, skillsTable, addSkillBox);
+
+        container.getChildren().addAll(profileCard, skillsSection);
         return container;
     }
 
-    // =========================================================================
-    // TAB 3: History
-    // =========================================================================
-    private Parent createHistoryTab() {
+    private Parent buildCompaniesTab() {
         VBox container = new VBox(16);
         container.setPadding(new Insets(24));
+        container.setStyle("-fx-background-color: white;");
 
-        HBox header = new HBox(16);
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox headerBox = new HBox(16);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label title = new Label("Your Past Mock Interview Submissions");
+        Label title = new Label("Placement Drives & Corporate Eligibility");
         title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        title.setTextFill(Color.web("#0f172a"));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button refreshBtn = new Button("Refresh History");
-        refreshBtn.setOnAction(e -> loadHistoryData());
+        Button refreshBtn = new Button("Refresh Drives");
+        refreshBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> loadCompaniesData());
 
-        header.getChildren().addAll(title, spacer, refreshBtn);
-
-        historyTable = new TableView<>();
-        TableColumn<Result, String> idCol = new TableColumn<>("Result ID");
-        idCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getResultId())));
-
-        TableColumn<Result, String> intIdCol = new TableColumn<>("Interview ID");
-        intIdCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getInterviewId())));
-
-        TableColumn<Result, String> scoreCol = new TableColumn<>("Score Awarded");
-        scoreCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTotalScore() + " / " + data.getValue().getMaxScore()));
-
-        TableColumn<Result, String> pctCol = new TableColumn<>("Percentage");
-        pctCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getPercentage() + "%"));
-
-        TableColumn<Result, String> gradeCol = new TableColumn<>("Grade");
-        gradeCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGrade()));
-
-        TableColumn<Result, String> dateCol = new TableColumn<>("Evaluated At");
-        dateCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEvaluatedAt() != null
-                ? data.getValue().getEvaluatedAt().toString().replace('T', ' ').substring(0, 19) : "Just now"));
-
-        historyTable.getColumns().addAll(idCol, intIdCol, scoreCol, pctCol, gradeCol, dateCol);
-        loadHistoryData();
-
-        container.getChildren().addAll(header, historyTable);
-        return container;
-    }
-
-    private void loadHistoryData() {
-        if (historyTable == null) return;
-        Task<List<Result>> task = new Task<>() {
-            @Override
-            protected List<Result> call() throws Exception {
-                return interviewService.getHistory(student.getId());
-            }
-        };
-        task.setOnSucceeded(e -> historyTable.setItems(FXCollections.observableArrayList(task.getValue())));
-        task.setOnFailed(e -> Main.showErrorAlert("History Error", task.getException().getMessage()));
-        new Thread(task).start();
-    }
-
-    // =========================================================================
-    // TAB 4: Recommendations & Analytics
-    // =========================================================================
-    private Parent createRecommendationsTab() {
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: transparent;");
-
-        VBox container = new VBox(20);
-        container.setPadding(new Insets(24));
-
-        Label heading = new Label("Automated Skill Diagnostics & Growth Roadmap");
-        heading.setFont(Font.font("SansSerif", FontWeight.BOLD, 20));
-
-        // Skill mastery bars / cards
-        VBox scoresBox = new VBox(12);
-        styleCard(scoresBox);
-        scoresBox.setPadding(new Insets(20));
-
-        Label scoresTitle = new Label("Domain Mastery Breakdown (Average Score)");
-        scoresTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 16));
-        scoresBox.getChildren().add(scoresTitle);
-
-        VBox weakBox = new VBox(12);
-        styleCard(weakBox);
-        weakBox.setPadding(new Insets(20));
-        weakBox.setStyle(weakBox.getStyle() + "; -fx-border-color: #fca5a5; -fx-background-color: #fff1f2;");
-
-        Label weakTitle = new Label("Weak-Skill Detection (< 50% Threshold)");
-        weakTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 16));
-        weakTitle.setStyle("-fx-text-fill: #991b1b;");
-        weakBox.getChildren().add(weakTitle);
-
-        VBox recoBox = new VBox(12);
-        styleCard(recoBox);
-        recoBox.setPadding(new Insets(20));
-
-        Label recoTitle = new Label("Personalized Remediation Recommendations");
-        recoTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 16));
-        recoBox.getChildren().add(recoTitle);
-
-        // Load analytics in background
-        Task<Void> task = new Task<>() {
-            private Map<String, Double> skillScores;
-            private List<String> weakSkills;
-            private List<String> recommendations;
-
-            @Override
-            protected Void call() throws Exception {
-                skillScores = analyticsService.getSkillScores(student.getId());
-                weakSkills = analyticsService.getWeakSkills(student.getId());
-                recommendations = analyticsService.getRecommendations(student.getId());
-                return null;
-            }
-
-            @Override
-            protected void succeeded() {
-                for (Map.Entry<String, Double> entry : skillScores.entrySet()) {
-                    ProgressBar bar = new ProgressBar(entry.getValue() / 100.0);
-                    bar.setPrefWidth(300);
-                    if (entry.getValue() < 50.0) {
-                        bar.setStyle("-fx-accent: #ef4444;");
-                    } else if (entry.getValue() >= 75.0) {
-                        bar.setStyle("-fx-accent: #22c55e;");
-                    } else {
-                        bar.setStyle("-fx-accent: #3b82f6;");
-                    }
-                    Label name = new Label(entry.getKey() + ": " + entry.getValue() + "%");
-                    name.setPrefWidth(180);
-                    HBox row = new HBox(12, name, bar);
-                    scoresBox.getChildren().add(row);
-                }
-
-                if (weakSkills.isEmpty()) {
-                    Label allGood = new Label("✓ No weak skills detected! All competency averages exceed 50%.");
-                    allGood.setStyle("-fx-text-fill: #166534; -fx-font-weight: bold;");
-                    weakBox.getChildren().add(allGood);
-                } else {
-                    for (String w : weakSkills) {
-                        Label item = new Label("⚠ Weak Domain: " + w + " — Immediate targeted revision suggested.");
-                        item.setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;");
-                        weakBox.getChildren().add(item);
-                    }
-                }
-
-                for (String r : recommendations) {
-                    Label item = new Label("• " + r);
-                    item.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155;");
-                    recoBox.getChildren().add(item);
-                }
-            }
-        };
-        new Thread(task).start();
-
-        container.getChildren().addAll(heading, scoresBox, weakBox, recoBox);
-        scrollPane.setContent(container);
-        return scrollPane;
-    }
-
-    // =========================================================================
-    // TAB 5: Companies & Eligibility
-    // =========================================================================
-    private Parent createCompaniesTab() {
-        VBox container = new VBox(16);
-        container.setPadding(new Insets(24));
-
-        HBox header = new HBox(16);
-        header.setAlignment(Pos.CENTER_LEFT);
-
-        Label title = new Label("Hiring Companies & Placement Eligibility Matrix");
-        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Button refreshBtn = new Button("Re-evaluate Eligibility");
-        refreshBtn.setOnAction(e -> loadCompaniesAndRoles());
-
-        header.getChildren().addAll(title, spacer, refreshBtn);
+        headerBox.getChildren().addAll(title, spacer, refreshBtn);
 
         companiesTable = new TableView<>();
+        companiesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<RoleRow, String> compCol = new TableColumn<>("Company");
-        compCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().companyName));
-        compCol.setPrefWidth(180);
+        TableColumn<RoleRow, String> companyCol = new TableColumn<>("Company");
+        companyCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCompanyName()));
 
-        TableColumn<RoleRow, String> titleCol = new TableColumn<>("Job Role");
-        titleCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().roleTitle));
-        titleCol.setPrefWidth(220);
+        TableColumn<RoleRow, String> roleCol = new TableColumn<>("Role Title");
+        roleCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getRoleTitle()));
 
         TableColumn<RoleRow, String> cgpaCol = new TableColumn<>("Min CGPA");
-        cgpaCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().minCgpa)));
-        cgpaCol.setPrefWidth(90);
+        cgpaCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.2f", d.getValue().getMinCgpa())));
 
-        TableColumn<RoleRow, String> skillsCol = new TableColumn<>("Required Skills");
-        skillsCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().requiredSkillsStr));
-        skillsCol.setPrefWidth(220);
+        TableColumn<RoleRow, String> skillsReqCol = new TableColumn<>("Mandatory Skills");
+        skillsReqCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getRequiredSkillsStr()));
 
         TableColumn<RoleRow, String> eligCol = new TableColumn<>("Eligibility Status");
-        eligCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().eligibleStatus));
-        eligCol.setPrefWidth(150);
+        eligCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isEligible() ? "ELIGIBLE" : "NOT ELIGIBLE"));
 
-        companiesTable.getColumns().addAll(compCol, titleCol, cgpaCol, skillsCol, eligCol);
+        TableColumn<RoleRow, String> appCol = new TableColumn<>("Application Status");
+        appCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isApplied() ? "APPLIED" : "NOT APPLIED"));
 
-        HBox actionBox = new HBox(16);
-        actionBox.setAlignment(Pos.CENTER_LEFT);
+        companiesTable.getColumns().addAll(companyCol, roleCol, cgpaCol, skillsReqCol, eligCol, appCol);
+        VBox.setVgrow(companiesTable, Priority.ALWAYS);
 
-        Button applyBtn = new Button("Apply for Selected Role");
-        stylePrimaryButton(applyBtn);
+        HBox actions = new HBox(16);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        Button applyBtn = new Button("Apply to Selected Drive");
+        applyBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;");
 
         applyBtn.setOnAction(e -> {
             RoleRow selected = companiesTable.getSelectionModel().getSelectedItem();
             if (selected == null) {
-                Main.showErrorAlert("Select Role", "Please click on a job opening row to apply.");
+                mainApp.showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a job role from the table.");
+                return;
+            }
+
+            if (selected.isApplied()) {
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Already Applied", "You have already submitted an application for " + selected.getRoleTitle());
+                return;
+            }
+
+            if (!selected.isEligible()) {
+                mainApp.showAlert(Alert.AlertType.WARNING, "Ineligible",
+                        "You do not meet the minimum eligibility criteria (CGPA cutoff or required skills) for this drive.");
                 return;
             }
 
             Task<Void> applyTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    placementService.applyToRole(student.getId(), selected.roleId);
+                    placementService.applyToRole(student.getId(), selected.getRoleId());
                     return null;
                 }
             };
-            applyTask.setOnSucceeded(ev -> {
-                Main.showSuccessAlert("Application Sent", "Successfully submitted your application for '" + selected.roleTitle + "' at " + selected.companyName + "!");
-                loadCompaniesAndRoles();
+
+            applyTask.setOnSucceeded(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Application Submitted",
+                        "Successfully applied to " + selected.getRoleTitle() + " at " + selected.getCompanyName() + "!");
+                loadCompaniesData();
             });
-            applyTask.setOnFailed(ev -> Main.showErrorAlert("Application Blocked", applyTask.getException().getMessage()));
+
+            applyTask.setOnFailed(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Application Failed", applyTask.getException().getMessage());
+            });
+
             new Thread(applyTask).start();
         });
 
-        actionBox.getChildren().addAll(applyBtn);
-        loadCompaniesAndRoles();
-
-        container.getChildren().addAll(header, companiesTable, actionBox);
+        actions.getChildren().add(applyBtn);
+        container.getChildren().addAll(headerBox, companiesTable, actions);
         return container;
     }
 
-    private void loadCompaniesAndRoles() {
-        if (companiesTable == null) return;
+    private void loadSkillsData() {
+        Task<List<SkillRow>> task = new Task<>() {
+            @Override
+            protected List<SkillRow> call() throws Exception {
+                Student s = userService.getProfile(student.getId());
+                student.setSkillLevels(s.getSkillLevels());
+                List<SkillRow> rows = new ArrayList<>();
+                for (Map.Entry<Skill, String> entry : s.getSkillLevels().entrySet()) {
+                    rows.add(new SkillRow(entry.getKey().getId(), entry.getKey().getName(), entry.getKey().getCategory(), entry.getValue()));
+                }
+                return rows;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (skillsTable != null) {
+                skillsTable.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+        });
+
+        new Thread(task).start();
+    }
+
+    private void loadCompaniesData() {
         Task<List<RoleRow>> task = new Task<>() {
             @Override
             protected List<RoleRow> call() throws Exception {
                 List<Company> companies = placementService.getAllCompanies();
                 List<JobRole> eligibleRoles = placementService.getEligibleRoles(student.getId());
-                List<RoleRow> rows = new java.util.ArrayList<>();
+                List<Integer> appliedIds = placementService.getAppliedRoleIds(student.getId());
 
+                List<RoleRow> rows = new ArrayList<>();
                 for (Company c : companies) {
                     for (JobRole r : c.getJobRoles()) {
-                        boolean isEligible = false;
-                        for (JobRole er : eligibleRoles) {
-                            if (er.getRoleId() == r.getRoleId()) {
-                                isEligible = true;
-                                break;
-                            }
+                        boolean isEligible = eligibleRoles.stream().anyMatch(er -> er.getRoleId() == r.getRoleId());
+                        boolean isApplied = appliedIds.contains(r.getRoleId());
+
+                        StringBuilder sb = new StringBuilder();
+                        for (Skill sk : r.getRequiredSkills()) {
+                            if (sb.length() > 0) sb.append(", ");
+                            sb.append(sk.getName());
                         }
 
-                        StringBuilder skillsStr = new StringBuilder();
-                        for (Skill s : r.getRequiredSkills()) {
-                            if (skillsStr.length() > 0) skillsStr.append(", ");
-                            skillsStr.append(s.getSkillName());
-                        }
-
-                        String status;
-                        if (student.hasAppliedToRole(r.getRoleId())) {
-                            status = "✓ APPLIED";
-                        } else if (isEligible) {
-                            status = "★ ELIGIBLE";
-                        } else {
-                            if (student.getCgpa() < r.getMinCgpa()) {
-                                status = "✗ CGPA < " + r.getMinCgpa();
-                            } else {
-                                status = "✗ Missing Skills";
-                            }
-                        }
-
-                        rows.add(new RoleRow(r.getRoleId(), c.getName(), r.getTitle(), r.getMinCgpa(),
-                                skillsStr.toString(), status));
+                        rows.add(new RoleRow(r.getRoleId(), c.getName(), r.getTitle(), r.getMinCgpa(), sb.toString(), isEligible, isApplied));
                     }
                 }
                 return rows;
             }
         };
 
-        task.setOnSucceeded(e -> companiesTable.setItems(FXCollections.observableArrayList(task.getValue())));
-        task.setOnFailed(e -> Main.showErrorAlert("Companies Error", task.getException().getMessage()));
+        task.setOnSucceeded(e -> {
+            if (companiesTable != null) {
+                companiesTable.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+        });
+
         new Thread(task).start();
     }
 
+    public static class SkillRow {
+        private final int skillId;
+        private final String name;
+        private final String category;
+        private final String level;
+
+        public SkillRow(int skillId, String name, String category, String level) {
+            this.skillId = skillId;
+            this.name = name;
+            this.category = category;
+            this.level = level;
+        }
+
+        public int getSkillId() { return skillId; }
+        public String getName() { return name; }
+        public String getCategory() { return category; }
+        public String getLevel() { return level; }
+    }
+
     public static class RoleRow {
-        public int roleId;
-        public String companyName;
-        public String roleTitle;
-        public double minCgpa;
-        public String requiredSkillsStr;
-        public String eligibleStatus;
+        private final int roleId;
+        private final String companyName;
+        private final String roleTitle;
+        private final double minCgpa;
+        private final String requiredSkillsStr;
+        private final boolean eligible;
+        private final boolean applied;
 
         public RoleRow(int roleId, String companyName, String roleTitle, double minCgpa,
-                       String requiredSkillsStr, String eligibleStatus) {
+                       String requiredSkillsStr, boolean eligible, boolean applied) {
             this.roleId = roleId;
             this.companyName = companyName;
             this.roleTitle = roleTitle;
             this.minCgpa = minCgpa;
             this.requiredSkillsStr = requiredSkillsStr;
-            this.eligibleStatus = eligibleStatus;
+            this.eligible = eligible;
+            this.applied = applied;
         }
-    }
 
-    // ---------------- Styling Helpers ----------------
-
-    private void styleCard(VBox card) {
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 10, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-    }
-
-    private void stylePrimaryButton(Button btn) {
-        btn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 18; -fx-cursor: hand;");
+        public int getRoleId() { return roleId; }
+        public String getCompanyName() { return companyName; }
+        public String getRoleTitle() { return roleTitle; }
+        public double getMinCgpa() { return minCgpa; }
+        public String getRequiredSkillsStr() { return requiredSkillsStr; }
+        public boolean isEligible() { return eligible; }
+        public boolean isApplied() { return applied; }
     }
 }

@@ -3,29 +3,15 @@ package prepforge.model;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Domain Model: Company
- * 
- * Represents an employer or recruiting organization (e.g. "Google", "Infosys", "Amazon").
- * 
- * Demonstrates:
- * 1. ENCAPSULATION: Fields are private and accessed via getters and setters.
- * 2. AGGREGATION: A Company HAS-A list of JobRoles (jobRoles).
- *    Even if a company entity is processed, job roles can conceptually exist on their own.
- */
 public class Company {
 
-    // ---------------- Private Fields ----------------
     private int companyId;
     private String name;
     private String description;
     private String location;
     private String industry;
-
-    // Aggregation: Company HAS-A list of JobRoles
     private List<JobRole> jobRoles;
 
-    // ---------------- Constructors (Overloading) ----------------
     public Company() {
         this.jobRoles = new ArrayList<>();
     }
@@ -41,6 +27,14 @@ public class Company {
         this.location = location;
         this.industry = industry;
         this.description = industry + " company based in " + location;
+        this.jobRoles = new ArrayList<>();
+    }
+
+    public Company(String name, String description, String location, String industry) {
+        this.name = name;
+        this.description = description;
+        this.location = location;
+        this.industry = industry;
         this.jobRoles = new ArrayList<>();
     }
 
@@ -62,7 +56,6 @@ public class Company {
         this.jobRoles = new ArrayList<>();
     }
 
-    // ---------------- Aggregation Helper ----------------
     public void addJobRole(JobRole role) {
         if (role != null) {
             jobRoles.add(role);
@@ -72,7 +65,6 @@ public class Company {
         }
     }
 
-    // ---------------- Getters and Setters ----------------
     public int getCompanyId() {
         return companyId;
     }
@@ -81,7 +73,6 @@ public class Company {
         this.companyId = companyId;
     }
 
-    // Contract alias: id
     public int getId() {
         return companyId;
     }
@@ -99,7 +90,7 @@ public class Company {
     }
 
     public String getDescription() {
-        return description != null ? description : (industry != null ? industry : "");
+        return description;
     }
 
     public void setDescription(String description) {
@@ -132,6 +123,6 @@ public class Company {
 
     @Override
     public String toString() {
-        return name + (location != null ? " (" + location + ")" : "");
+        return name + " (" + industry + ", " + location + ")";
     }
 }

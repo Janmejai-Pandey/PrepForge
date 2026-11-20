@@ -7,35 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Subclass: Student
- * 
- * Demonstrates:
- * 1. INHERITANCE: Extends User to inherit id, name, email, passwordHash.
- * 2. POLYMORPHISM (Method Overriding): Implements getRole() and showMenu().
- * 3. METHOD OVERLOADING: Multiple updateProfile() methods with different parameters.
- * 4. COLLECTIONS:
- *    - List<Skill>: Ordered collection of skills acquired by the student (Aggregation).
- *    - Map<Skill, String> / Map<Integer, String>: Maps skill to proficiency level ("Beginner", "Intermediate", "Advanced").
- *    - Set<Integer>: Stores unique job role IDs applied to (prevents duplicate applications).
- */
 public class Student extends User {
 
-    // ---------------- Student Specific Fields ----------------
     private String enrollmentNumber;
     private String branch;
     private double cgpa;
-
-    // Aggregation: Student HAS-A list of skills
     private List<Skill> skills;
-
-    // Map: Key = Skill ID, Value = Proficiency Level ("Beginner", "Intermediate", "Advanced")
     private Map<Integer, String> skillProficiency;
-
-    // Set: Stores unique Job Role IDs the student has applied for
     private Set<Integer> appliedRoleIds;
 
-    // ---------------- Constructors (Overloading) ----------------
     public Student() {
         super();
         this.skills = new ArrayList<>();
@@ -63,31 +43,25 @@ public class Student extends User {
         this.appliedRoleIds = new HashSet<>();
     }
 
-    // ---------------- Method Overriding (Polymorphism) ----------------
     @Override
     public String getRole() {
-        return "STUDENT";
+        return "Student";
     }
 
     @Override
     public void showMenu() {
-        System.out.println("=== STUDENT PORTAL MENU ===");
-        System.out.println("1. View Profile");
-        System.out.println("2. Update Profile");
-        System.out.println("3. Manage Skills");
-        System.out.println("4. View Eligible Job Openings");
-        System.out.println("5. Apply for a Job Role");
-        System.out.println("6. Logout");
+        System.out.println("1. Profile");
+        System.out.println("2. Skills");
+        System.out.println("3. Eligible Roles");
+        System.out.println("4. Apply");
+        System.out.println("5. Logout");
     }
 
-    // ---------------- Method Overloading: updateProfile ----------------
-    // Version 1: Quick update for basic contact info
     public void updateProfile(String name, String email) {
         setName(name);
         setEmail(email);
     }
 
-    // Version 2: Complete profile update including academic details
     public void updateProfile(String name, String email, String branch, double cgpa) {
         setName(name);
         setEmail(email);
@@ -95,7 +69,6 @@ public class Student extends User {
         this.cgpa = cgpa;
     }
 
-    // Version 3: Update from another Student object
     public void updateProfile(Student s) {
         if (s != null) {
             setName(s.getName());
@@ -108,21 +81,18 @@ public class Student extends User {
         }
     }
 
-    // ---------------- Skill Management Helper Methods ----------------
     public void addSkill(Skill skill, String level) {
         if (skill != null) {
-            // Check if skill already in list to avoid duplicates
-            boolean alreadyPresent = false;
+            boolean present = false;
             for (Skill s : skills) {
                 if (s.getSkillId() == skill.getSkillId()) {
-                    alreadyPresent = true;
+                    present = true;
                     break;
                 }
             }
-            if (!alreadyPresent) {
+            if (!present) {
                 skills.add(skill);
             }
-            // Record proficiency in Map
             skillProficiency.put(skill.getSkillId(), level != null ? level : "Beginner");
         }
     }
@@ -140,10 +110,6 @@ public class Student extends User {
         return skillProficiency.getOrDefault(skillId, "Unknown");
     }
 
-    /**
-     * Returns a Map of Skill object to its proficiency level string,
-     * directly fulfilling the contract: Map<Skill, String> of skill levels.
-     */
     public Map<Skill, String> getSkillLevels() {
         Map<Skill, String> levels = new HashMap<>();
         for (Skill s : skills) {
@@ -160,7 +126,6 @@ public class Student extends User {
         }
     }
 
-    // ---------------- Application Helper Methods ----------------
     public void applyToRole(int roleId) {
         appliedRoleIds.add(roleId);
     }
@@ -169,7 +134,6 @@ public class Student extends User {
         return appliedRoleIds.contains(roleId);
     }
 
-    // ---------------- Getters and Setters ----------------
     public String getEnrollmentNumber() {
         return enrollmentNumber;
     }
@@ -220,7 +184,14 @@ public class Student extends User {
 
     @Override
     public String toString() {
-        return "Student [id=" + getId() + ", name=" + getName() + ", enrollmentNumber=" + enrollmentNumber
-                + ", branch=" + branch + ", cgpa=" + cgpa + ", skillsCount=" + skills.size() + "]";
+        return "Student{" +
+                "id=" + getId() +
+                ", name='" + getName() + '\'' +
+                ", email='" + getEmail() + '\'' +
+                ", enrollmentNumber='" + enrollmentNumber + '\'' +
+                ", branch='" + branch + '\'' +
+                ", cgpa=" + cgpa +
+                ", skillsCount=" + skills.size() +
+                '}';
     }
 }

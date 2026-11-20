@@ -3,9 +3,9 @@ package prepforge.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import prepforge.dao.InMemoryPlacementDao;
+import prepforge.dao.CompanyDao;
+import prepforge.dao.InMemoryCompanyDao;
 import prepforge.dao.InMemoryUserDao;
-import prepforge.dao.PlacementDao;
 import prepforge.dao.UserDao;
 import prepforge.exception.PrepForgeException;
 import prepforge.exception.ValidationException;
@@ -15,61 +15,62 @@ import prepforge.model.Skill;
 import prepforge.model.Student;
 import prepforge.util.Validator;
 
-/**
- * Service Class: PlacementService
- * 
- * Manages company recruitment drives, job role postings, student eligibility matching,
- * and placement applications.
- * 
- * Eligibility Rule:
- * 1. Student CGPA >= JobRole minimum CGPA
- *    AND
- * 2. Student possesses ALL required skills for that JobRole.
- */
 public class PlacementService {
 
-    private final PlacementDao placementDao;
+    private final CompanyDao companyDao;
     private final UserDao userDao;
 
-    // Default constructor
     public PlacementService() {
-        this.placementDao = new InMemoryPlacementDao();
+        this.companyDao = new InMemoryCompanyDao();
         this.userDao = new InMemoryUserDao();
     }
 
-    // Constructor with Dependency Injection
-    public PlacementService(PlacementDao placementDao, UserDao userDao) {
-        this.placementDao = placementDao;
+    public PlacementService(CompanyDao companyDao, UserDao userDao) {
+        this.companyDao = companyDao;
         this.userDao = userDao;
     }
 
-    // ------------------------------------------------------------------------
-    // 1. GET ALL COMPANIES
-    // ------------------------------------------------------------------------
     public List<Company> getAllCompanies() throws PrepForgeException {
-        return placementDao.findAllCompanies();
+        return companyDao.findAllCompanies();
     }
 
-    // ------------------------------------------------------------------------
-    // 2. GET ELIGIBLE ROLES FOR STUDENT
-    // ------------------------------------------------------------------------
     public List<JobRole> getEligibleRoles(int studentId) throws PrepForgeException {
-        // Step 1: Validate student ID
         Validator.validatePositiveId(studentId, "Student ID");
 
-        // Step 2: Fetch student details
         Student student = userDao.findStudentById(studentId);
         if (student == null) {
-            throw new ValidationException("Cannot evaluate eligibility: Student not found with ID " + studentId);
+            throw new ValidationException("Student not found with ID: " + studentId);
         }
 
-        // Step 3: Fetch all posted job roles
-        List<JobRole> allRoles = placementDao.findAllJobRoles();
+        List<JobRole> allRoles = companyDao.findAllJobRoles();
         List<JobRole> eligibleRoles = new ArrayList<>();
 
-        // Step 4: Evaluate eligibility criteria for each job role
         for (JobRole role : allRoles) {
-            if (isStudentEligible(student, role)) {
+            if (student.getCgpa() < role.getMinCgpa()) {
+                continue;
+            }
+
+            Set<Skill> requiredSkills = role.getRequiredSkills();
+            boolean hasAllSkills = true;
+
+            if (requiredSkills != null && !requiredSkills.isEmpty()) {
+                List<Skill> studentSkills = student.getSkills();
+                for (Skill req : requiredSkills) {
+                    boolean matched = false;
+                    for (Skill s : studentSkills) {
+                        if (s.getId() == req.getId() || s.getName().equalsIgnoreCase(req.getName())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        hasAllSkills = false;
+                        break;
+                    }
+                }
+            }
+
+            if (hasAllSkills) {
                 eligibleRoles.add(role);
             }
         }
@@ -77,52 +78,55 @@ public class PlacementService {
         return eligibleRoles;
     }
 
-    // ------------------------------------------------------------------------
-    // 3. APPLY TO ROLE
-    // ------------------------------------------------------------------------
     public void applyToRole(int studentId, int roleId) throws PrepForgeException {
         Validator.validatePositiveId(studentId, "Student ID");
         Validator.validatePositiveId(roleId, "Job Role ID");
 
         Student student = userDao.findStudentById(studentId);
         if (student == null) {
-            throw new ValidationException("Application failed: Student not found with ID " + studentId);
+            throw new ValidationException("Application rejected: Student ID " + studentId + " not found.");
         }
 
-        JobRole role = placementDao.findJobRoleById(roleId);
+        JobRole role = companyDao.findJobRoleById(roleId);
         if (role == null) {
-            throw new ValidationException("Application failed: Job Role not found with ID " + roleId);
+            throw new ValidationException("Application rejected: Job role ID " + roleId + " not found.");
         }
 
-        // Check if already applied
-        if (placementDao.hasApplied(studentId, roleId) || student.hasAppliedToRole(roleId)) {
-            throw new ValidationException("Application failed: Student has already applied for '" + role.getTitle() + "'.");
+        if (companyDao.hasApplied(studentId, roleId)) {
+            throw new ValidationException("You have already submitted an application for '" + role.getTitle() + "'.");
         }
 
-        // Check placement eligibility
-        if (!isStudentEligible(student, role)) {
-            throw new ValidationException("Application rejected: Student does not meet the eligibility criteria for '"
-                    + role.getTitle() + "'. Required CGPA: " + role.getMinCgpa() + " (Student CGPA: " + student.getCgpa() + ")");
+        if (student.getCgpa() < role.getMinCgpa()) {
+            throw new ValidationException("Application rejected: CGPA cutoff not met. Required: "
+                    + role.getMinCgpa() + ", Your CGPA: " + student.getCgpa());
         }
 
-        // Record application
-        placementDao.saveApplication(studentId, roleId);
-        student.applyToRole(roleId);
+        Set<Skill> requiredSkills = role.getRequiredSkills();
+        if (requiredSkills != null && !requiredSkills.isEmpty()) {
+            List<Skill> studentSkills = student.getSkills();
+            for (Skill req : requiredSkills) {
+                boolean matched = false;
+                for (Skill s : studentSkills) {
+                    if (s.getId() == req.getId() || s.getName().equalsIgnoreCase(req.getName())) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    throw new ValidationException("Application rejected: Missing mandatory skill '" + req.getName() + "'.");
+                }
+            }
+        }
+
+        companyDao.saveApplication(studentId, roleId);
     }
 
-    // ------------------------------------------------------------------------
-    // 4. SAVE COMPANY
-    // ------------------------------------------------------------------------
     public void saveCompany(Company c) throws PrepForgeException {
         Validator.validateNotNull(c, "Company");
         Validator.validateName(c.getName());
-
-        placementDao.saveCompany(c);
+        companyDao.saveCompany(c);
     }
 
-    // ------------------------------------------------------------------------
-    // 5. SAVE JOB ROLE
-    // ------------------------------------------------------------------------
     public void saveJobRole(JobRole r) throws PrepForgeException {
         Validator.validateNotNull(r, "JobRole");
         if (r.getTitle() == null || r.getTitle().trim().isEmpty()) {
@@ -130,44 +134,18 @@ public class PlacementService {
         }
         Validator.validateCgpa(r.getMinCgpa());
         Validator.validateNotNull(r.getCompany(), "Hiring Company");
-
-        placementDao.saveJobRole(r);
+        companyDao.saveJobRole(r);
     }
 
-    // ------------------------------------------------------------------------
-    // HELPER: ELIGIBILITY CHECKING ALGORITHM
-    // ------------------------------------------------------------------------
-    private boolean isStudentEligible(Student student, JobRole role) {
-        // Condition 1: CGPA Eligibility Check
-        if (student.getCgpa() < role.getMinCgpa()) {
-            return false;
-        }
+    public List<JobRole> getAllJobRoles() throws PrepForgeException {
+        return companyDao.findAllJobRoles();
+    }
 
-        // Condition 2: Skills Eligibility Check
-        Set<Skill> requiredSkills = role.getRequiredSkills();
-        if (requiredSkills == null || requiredSkills.isEmpty()) {
-            return true; // No specific skills demanded
-        }
+    public boolean hasApplied(int studentId, int roleId) throws PrepForgeException {
+        return companyDao.hasApplied(studentId, roleId);
+    }
 
-        // The student must possess EVERY skill required by the role
-        for (Skill requiredSkill : requiredSkills) {
-            boolean hasThisSkill = false;
-
-            // Check against student's acquired skills
-            for (Skill studentSkill : student.getSkills()) {
-                if (studentSkill.equals(requiredSkill)
-                        || studentSkill.getSkillId() == requiredSkill.getSkillId()
-                        || studentSkill.getSkillName().equalsIgnoreCase(requiredSkill.getSkillName())) {
-                    hasThisSkill = true;
-                    break;
-                }
-            }
-
-            if (!hasThisSkill) {
-                return false; // Student is missing at least one required skill
-            }
-        }
-
-        return true;
+    public List<Integer> getAppliedRoleIds(int studentId) throws PrepForgeException {
+        return companyDao.findAppliedRoleIds(studentId);
     }
 }

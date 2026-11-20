@@ -7,17 +7,6 @@ import prepforge.model.Skill;
 import prepforge.model.Student;
 import prepforge.model.User;
 
-/**
- * DAO Interface: UserDao
- * 
- * Defines the contract for all persistence operations related to users,
- * students, admins, and skills.
- * 
- * Demonstrates:
- * 1. SEPARATION OF CONCERNS: The Service layer only talks to this interface.
- *    No SQL or storage details appear in the Service layer.
- * 2. DATA ACCESS EXCEPTION WRAPPING: Throws DataAccessException on failures.
- */
 public interface UserDao {
 
     User findByEmail(String email) throws DataAccessException;

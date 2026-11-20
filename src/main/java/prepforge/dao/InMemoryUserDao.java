@@ -10,13 +10,6 @@ import prepforge.model.Skill;
 import prepforge.model.Student;
 import prepforge.model.User;
 
-/**
- * Implementation: InMemoryUserDao
- * 
- * Implements the UserDao contract.
- * Acts as an in-memory repository (or mock data layer) adhering strictly
- * to the DAO pattern: UI -> Service -> DAO -> Database.
- */
 public class InMemoryUserDao implements UserDao {
 
     private final Map<Integer, User> userDatabase = new HashMap<>();
@@ -58,14 +51,13 @@ public class InMemoryUserDao implements UserDao {
         if (emailIndex.containsKey(student.getEmail().toLowerCase())) {
             throw new DataAccessException("User with email '" + student.getEmail() + "' already exists.");
         }
-
-        if (student.getId() <= 0) {
-            student.setId(nextUserId++);
-        }
+        student.setId(nextUserId);
+        student.setUserId(nextUserId);
         student.setPasswordHash(passwordHash);
 
-        userDatabase.put(student.getId(), student);
+        userDatabase.put(nextUserId, student);
         emailIndex.put(student.getEmail().toLowerCase(), student);
+        nextUserId++;
     }
 
     @Override
@@ -76,29 +68,31 @@ public class InMemoryUserDao implements UserDao {
         if (emailIndex.containsKey(admin.getEmail().toLowerCase())) {
             throw new DataAccessException("User with email '" + admin.getEmail() + "' already exists.");
         }
-
-        if (admin.getId() <= 0) {
-            admin.setId(nextUserId++);
-        }
+        admin.setId(nextUserId);
+        admin.setUserId(nextUserId);
         admin.setPasswordHash(passwordHash);
 
-        userDatabase.put(admin.getId(), admin);
+        userDatabase.put(nextUserId, admin);
         emailIndex.put(admin.getEmail().toLowerCase(), admin);
+        nextUserId++;
     }
 
     @Override
     public Student findStudentById(int studentId) throws DataAccessException {
-        User u = userDatabase.get(studentId);
-        if (u instanceof Student) {
-            return (Student) u;
+        User user = userDatabase.get(studentId);
+        if (user instanceof Student) {
+            return (Student) user;
         }
         return null;
     }
 
     @Override
     public void updateStudent(Student student) throws DataAccessException {
-        if (student == null || !userDatabase.containsKey(student.getId())) {
-            throw new DataAccessException("Student with ID " + (student != null ? student.getId() : "null") + " not found.");
+        if (student == null) {
+            throw new DataAccessException("Cannot update null student.");
+        }
+        if (!userDatabase.containsKey(student.getId())) {
+            throw new DataAccessException("Student with ID " + student.getId() + " not found.");
         }
         userDatabase.put(student.getId(), student);
         emailIndex.put(student.getEmail().toLowerCase(), student);
@@ -108,11 +102,11 @@ public class InMemoryUserDao implements UserDao {
     public void addStudentSkill(int studentId, int skillId, String level) throws DataAccessException {
         Student student = findStudentById(studentId);
         if (student == null) {
-            throw new DataAccessException("Student not found with ID: " + studentId);
+            throw new DataAccessException("Student with ID " + studentId + " not found.");
         }
-        Skill skill = skillCatalog.get(skillId);
+        Skill skill = findSkillById(skillId);
         if (skill == null) {
-            throw new DataAccessException("Skill not found with ID: " + skillId);
+            throw new DataAccessException("Skill with ID " + skillId + " not found.");
         }
         student.addSkill(skill, level);
     }
@@ -121,9 +115,12 @@ public class InMemoryUserDao implements UserDao {
     public void removeStudentSkill(int studentId, int skillId) throws DataAccessException {
         Student student = findStudentById(studentId);
         if (student == null) {
-            throw new DataAccessException("Student not found with ID: " + studentId);
+            throw new DataAccessException("Student with ID " + studentId + " not found.");
         }
-        student.removeSkill(skillId);
+        Skill skill = findSkillById(skillId);
+        if (skill != null) {
+            student.getSkills().remove(skill);
+        }
     }
 
     @Override
@@ -139,9 +136,9 @@ public class InMemoryUserDao implements UserDao {
     @Override
     public List<Student> findAllStudents() throws DataAccessException {
         List<Student> students = new ArrayList<>();
-        for (User u : userDatabase.values()) {
-            if (u instanceof Student) {
-                students.add((Student) u);
+        for (User user : userDatabase.values()) {
+            if (user instanceof Student) {
+                students.add((Student) user);
             }
         }
         return students;
@@ -149,11 +146,11 @@ public class InMemoryUserDao implements UserDao {
 
     @Override
     public void deleteStudent(int studentId) throws DataAccessException {
-        User u = userDatabase.remove(studentId);
-        if (u != null) {
-            emailIndex.remove(u.getEmail().toLowerCase());
+        User user = userDatabase.remove(studentId);
+        if (user != null) {
+            emailIndex.remove(user.getEmail().toLowerCase());
         } else {
-            throw new DataAccessException("Cannot delete: Student not found with ID " + studentId);
+            throw new DataAccessException("Student with ID " + studentId + " not found.");
         }
     }
 }

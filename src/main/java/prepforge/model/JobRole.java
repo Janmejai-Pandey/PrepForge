@@ -5,31 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Domain Model: JobRole
- * 
- * Represents an open job profile offered by a company (e.g. "Software Engineer", "Backend Developer").
- * 
- * Demonstrates:
- * 1. ENCAPSULATION: All attributes are private.
- * 2. ASSOCIATION: JobRole references its hiring Company (association relationship).
- * 3. AGGREGATION: JobRole HAS-A Set of required Skills. A Set is used to guarantee uniqueness.
- * 4. DOMAIN LOGIC: isCgpaEligible(studentCgpa) validates academic qualification cutoff.
- */
 public class JobRole {
 
-    // ---------------- Private Fields ----------------
     private int roleId;
     private String title;
     private double minCgpa;
-
-    // Association: A JobRole belongs to a hiring Company
     private Company company;
-
-    // Aggregation: A JobRole requires a Set of unique Skills
     private Set<Skill> requiredSkills;
 
-    // ---------------- Constructors (Overloading) ----------------
     public JobRole() {
         this.requiredSkills = new HashSet<>();
     }
@@ -49,7 +32,6 @@ public class JobRole {
         this.requiredSkills = new HashSet<>();
     }
 
-    // ---------------- Helper Methods ----------------
     public void addRequiredSkill(Skill skill) {
         if (skill != null) {
             requiredSkills.add(skill);
@@ -60,7 +42,6 @@ public class JobRole {
         return studentCgpa >= this.minCgpa;
     }
 
-    // ---------------- Getters and Setters ----------------
     public int getRoleId() {
         return roleId;
     }
@@ -69,7 +50,6 @@ public class JobRole {
         this.roleId = roleId;
     }
 
-    // Contract alias: id
     public int getId() {
         return roleId;
     }
@@ -110,9 +90,6 @@ public class JobRole {
         this.requiredSkills = requiredSkills != null ? requiredSkills : new HashSet<>();
     }
 
-    /**
-     * List-based accessor to directly satisfy CONTRACT_M1: List<Skill> required skills
-     */
     public List<Skill> getRequiredSkillsList() {
         return new ArrayList<>(requiredSkills);
     }

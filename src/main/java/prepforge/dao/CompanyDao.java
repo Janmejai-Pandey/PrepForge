@@ -5,13 +5,7 @@ import prepforge.exception.DataAccessException;
 import prepforge.model.Company;
 import prepforge.model.JobRole;
 
-/**
- * DAO Interface: PlacementDao
- * 
- * Defines the contract for persistence operations related to companies,
- * job roles, and placement applications.
- */
-public interface PlacementDao {
+public interface CompanyDao {
 
     List<Company> findAllCompanies() throws DataAccessException;
 

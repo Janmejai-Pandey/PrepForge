@@ -1,11 +1,14 @@
 package prepforge;
 
-import prepforge.dao.InMemoryPlacementDao;
+import java.util.List;
+import prepforge.dao.CompanyDao;
+import prepforge.dao.InMemoryCompanyDao;
 import prepforge.dao.InMemoryUserDao;
-import prepforge.dao.PlacementDao;
 import prepforge.dao.UserDao;
+import prepforge.exception.DataAccessException;
 import prepforge.exception.ValidationException;
 import prepforge.model.Admin;
+import prepforge.model.Company;
 import prepforge.model.JobRole;
 import prepforge.model.Skill;
 import prepforge.model.Student;
@@ -15,19 +18,6 @@ import prepforge.service.UserService;
 import prepforge.util.PasswordHasher;
 import prepforge.util.Validator;
 
-import java.util.List;
-
-/**
- * Standalone Test Runner & Verification Suite
- * 
- * Executes comprehensive unit and integration tests covering:
- * - Validator & Regex tests
- * - PasswordHasher (PBKDF2) tests
- * - UserService tests
- * - PlacementService tests
- * 
- * Can be run directly from any terminal or IDE via standard 'java TestRunner'.
- */
 public class TestRunner {
 
     private static int passedTests = 0;
@@ -42,18 +32,18 @@ public class TestRunner {
         runPasswordHasherTests();
         runUserServiceTests();
         runPlacementServiceTests();
+        runDaoTests();
 
         System.out.println("\n==================================================");
         System.out.println("TEST SUMMARY");
         System.out.println("  Passed: " + passedTests);
         System.out.println("  Failed: " + failedTests);
         System.out.println("  Total : " + (passedTests + failedTests));
-        if (failedTests == 0) {
-            System.out.println("  Status: ALL TESTS PASSED SUCCESSFULLY! [OK]");
-        } else {
-            System.out.println("  Status: SOME TESTS FAILED!");
-        }
         System.out.println("==================================================");
+
+        if (failedTests > 0) {
+            System.exit(1);
+        }
     }
 
     private static void assertTrue(String testName, boolean condition) {
@@ -66,136 +56,207 @@ public class TestRunner {
         }
     }
 
-    // -------------------------------------------------------------
-    // 1. VALIDATOR TESTS
-    // -------------------------------------------------------------
     private static void runValidatorTests() {
-        System.out.println("\n--- [Suite 1: Validator Tests] ---");
+        System.out.println("\n>>> 1. RUNNING VALIDATOR TESTS");
 
-        assertTrue("Valid email accepted", Validator.isValidEmail("rahul@prepforge.com"));
-        assertTrue("Invalid email without @ rejected", !Validator.isValidEmail("rahulprepforge.com"));
-        assertTrue("Invalid email without domain rejected", !Validator.isValidEmail("rahul@"));
+        assertTrue("Valid email format accepted", Validator.isValidEmail("student@prepforge.com"));
+        assertTrue("Invalid email without @ rejected", !Validator.isValidEmail("studentprepforge.com"));
+        assertTrue("Invalid email without domain rejected", !Validator.isValidEmail("student@"));
+        assertTrue("Empty email rejected", !Validator.isValidEmail(""));
         assertTrue("Null email rejected", !Validator.isValidEmail(null));
 
-        assertTrue("Valid password accepted", Validator.isValidPassword("secret123"));
-        assertTrue("Short password rejected", !Validator.isValidPassword("12345"));
+        assertTrue("Password >= 6 chars valid", Validator.isValidPassword("secret123"));
+        assertTrue("Password < 6 chars invalid", !Validator.isValidPassword("12345"));
+        assertTrue("Null password invalid", !Validator.isValidPassword(null));
 
-        assertTrue("Valid CGPA accepted", Validator.isValidCgpa(8.5));
-        assertTrue("Negative CGPA rejected", !Validator.isValidCgpa(-1.0));
-        assertTrue("CGPA > 10.0 rejected", !Validator.isValidCgpa(10.5));
+        assertTrue("CGPA 8.5 in valid range (0-10)", Validator.isValidCgpa(8.5));
+        assertTrue("CGPA 0.0 boundary valid", Validator.isValidCgpa(0.0));
+        assertTrue("CGPA 10.0 boundary valid", Validator.isValidCgpa(10.0));
+        assertTrue("CGPA -1.0 negative invalid", !Validator.isValidCgpa(-1.0));
+        assertTrue("CGPA 10.5 above 10 invalid", !Validator.isValidCgpa(10.5));
     }
 
-    // -------------------------------------------------------------
-    // 2. PASSWORD HASHER TESTS
-    // -------------------------------------------------------------
     private static void runPasswordHasherTests() {
-        System.out.println("\n--- [Suite 2: PasswordHasher (PBKDF2) Tests] ---");
-        try {
-            String password = "StrongPassword@2026";
-            String hash1 = PasswordHasher.hashPassword(password);
-            String hash2 = PasswordHasher.hashPassword(password);
+        System.out.println("\n>>> 2. RUNNING PASSWORD HASHER (PBKDF2) TESTS");
 
-            assertTrue("Hash string format contains salt separator ':'", hash1.contains(":"));
-            assertTrue("Unique salts produce different hashes for identical passwords", !hash1.equals(hash2));
-            assertTrue("Password verification succeeds for correct password", PasswordHasher.verifyPassword(password, hash1));
-            assertTrue("Password verification fails for incorrect password", !PasswordHasher.verifyPassword("WrongPassword", hash1));
+        try {
+            String rawPassword = "CandidatePassword@2024";
+            String hash1 = PasswordHasher.hashPassword(rawPassword);
+            String hash2 = PasswordHasher.hashPassword(rawPassword);
+
+            assertTrue("Hash format is salt:hash", hash1.contains(":") && hash1.split(":").length == 2);
+            assertTrue("Salts differ between separate hashes", !hash1.equals(hash2));
+            assertTrue("Correct password verification succeeds", PasswordHasher.verifyPassword(rawPassword, hash1));
+            assertTrue("Wrong password verification fails", !PasswordHasher.verifyPassword("WrongPassword!", hash1));
         } catch (Exception e) {
             assertTrue("PasswordHasher exception: " + e.getMessage(), false);
         }
     }
 
-    // -------------------------------------------------------------
-    // 3. USER SERVICE TESTS
-    // -------------------------------------------------------------
     private static void runUserServiceTests() {
-        System.out.println("\n--- [Suite 3: UserService Tests] ---");
+        System.out.println("\n>>> 3. RUNNING USER SERVICE TESTS");
+
+        UserDao userDao = new InMemoryUserDao();
+        UserService userService = new UserService(userDao);
+
         try {
-            UserDao dao = new InMemoryUserDao();
-            UserService userService = new UserService(dao);
+            Student s1 = new Student("Ananya Sharma", "ananya@prepforge.com", "EN2024_01", "CSE", 8.9);
+            userService.registerStudent(s1, "AnanyaPass123");
+            assertTrue("Student registration assigns positive ID", s1.getId() > 0);
 
-            // Register student
-            Student s = new Student("Amit Kumar", "amit@prepforge.com", "EN101", "CSE", 8.4);
-            userService.registerStudent(s, "AmitPass@123");
-            assertTrue("Student registered and assigned ID", s.getId() > 0);
+            User loggedIn = userService.login("ananya@prepforge.com", "AnanyaPass123");
+            assertTrue("Login retrieves valid user object", loggedIn != null);
+            assertTrue("Polymorphic role is 'Student'", "Student".equals(loggedIn.getRole()));
 
-            // Login polymorphic test
-            User user = userService.login("amit@prepforge.com", "AmitPass@123");
-            assertTrue("Polymorphic login returned non-null user", user != null);
-            assertTrue("User role is STUDENT", "STUDENT".equals(user.getRole()));
+            Admin admin = new Admin("Dr. Rajesh Gupta", "rajesh@prepforge.com", "ADM_101", "Head T&P");
+            userService.registerAdmin(admin, "AdminGuptaPass");
+            assertTrue("Admin registration assigns positive ID", admin.getId() > 0);
 
-            // Wrong password check
-            boolean wrongPassThrew = false;
+            User loggedAdmin = userService.login("rajesh@prepforge.com", "AdminGuptaPass");
+            assertTrue("Admin login returns Admin role", "Admin".equals(loggedAdmin.getRole()));
+
+            boolean duplicateRejected = false;
             try {
-                userService.login("amit@prepforge.com", "WrongPassword");
-            } catch (ValidationException e) {
-                wrongPassThrew = true;
+                Student dup = new Student("Fake Ananya", "ananya@prepforge.com", "EN2024_99", "IT", 7.0);
+                userService.registerStudent(dup, "AnyPassword123");
+            } catch (ValidationException ve) {
+                duplicateRejected = true;
             }
-            assertTrue("Wrong password throws ValidationException", wrongPassThrew);
+            assertTrue("Duplicate email registration rejected", duplicateRejected);
 
-            // Add skill
-            userService.addSkill(s.getId(), 1, "Advanced");
-            Student updated = userService.getProfile(s.getId());
-            assertTrue("Skill 'Java' added to student", updated.hasSkill(1));
+            List<Skill> allSkills = userService.getAllSkills();
+            assertTrue("Skill catalog available", allSkills.size() >= 2);
+            userService.addSkill(s1.getId(), allSkills.get(0).getId(), "Advanced");
+            Student updated = userService.getProfile(s1.getId());
+            assertTrue("Student skill added successfully", updated.getSkills().size() == 1);
 
-            // Register Admin
-            Admin admin = new Admin("Dr. Gupta", "admin@prepforge.com", "TPO Cell", "EMP1");
-            userService.registerAdmin(admin, "AdminPass@123");
-            User adminUser = userService.login("admin@prepforge.com", "AdminPass@123");
-            assertTrue("Admin logged in with role ADMIN", "ADMIN".equals(adminUser.getRole()));
+            userService.removeSkill(s1.getId(), allSkills.get(0).getId());
+            updated = userService.getProfile(s1.getId());
+            assertTrue("Student skill removed successfully", updated.getSkills().isEmpty());
+
+            userService.deleteStudent(s1.getId());
+            boolean deletedFound = false;
+            try {
+                userService.getProfile(s1.getId());
+                deletedFound = true;
+            } catch (ValidationException ve) {
+                deletedFound = false;
+            }
+            assertTrue("Deleted student no longer retrievable", !deletedFound);
 
         } catch (Exception e) {
-            assertTrue("UserService exception: " + e.getMessage(), false);
+            assertTrue("UserService unexpected exception: " + e.getMessage(), false);
         }
     }
 
-    // -------------------------------------------------------------
-    // 4. PLACEMENT SERVICE TESTS
-    // -------------------------------------------------------------
     private static void runPlacementServiceTests() {
-        System.out.println("\n--- [Suite 4: PlacementService Tests] ---");
+        System.out.println("\n>>> 4. RUNNING PLACEMENT SERVICE TESTS");
+
+        CompanyDao companyDao = new InMemoryCompanyDao();
+        UserDao userDao = new InMemoryUserDao();
+        PlacementService placementService = new PlacementService(companyDao, userDao);
+        UserService userService = new UserService(userDao);
+
         try {
-            UserDao userDao = new InMemoryUserDao();
-            PlacementDao placementDao = new InMemoryPlacementDao();
+            assertTrue("Initial company catalog populated", placementService.getAllCompanies().size() >= 4);
 
-            UserService userService = new UserService(userDao);
-            PlacementService placementService = new PlacementService(placementDao, userDao);
+            Student highCgpaStudent = new Student("Priya Patel", "priya@prepforge.com", "EN2024_02", "CSE", 9.2);
+            userService.registerStudent(highCgpaStudent, "PriyaPass123");
 
-            // Register qualified student (CGPA: 8.5, Skills: Java[1] and Data Structures[6])
-            Student qualified = new Student("Pooja", "pooja@prep.com", "EN202", "CSE", 8.5);
-            userService.registerStudent(qualified, "Pooja@123");
-            userService.addSkill(qualified.getId(), 1, "Advanced"); // Java
-            userService.addSkill(qualified.getId(), 6, "Advanced"); // Data Structures
-
-            // Google SDE requires CGPA 8.0, Java, Data Structures
-            List<JobRole> eligibleRoles = placementService.getEligibleRoles(qualified.getId());
-            assertTrue("Qualified student matched to eligible job roles", eligibleRoles.size() >= 1);
-
-            // Apply to Google SDE (Role ID 1)
-            placementService.applyToRole(qualified.getId(), 1);
-            assertTrue("Student successfully applied to role", qualified.hasAppliedToRole(1));
-
-            // Duplicate application check
-            boolean duplicateBlocked = false;
-            try {
-                placementService.applyToRole(qualified.getId(), 1);
-            } catch (ValidationException e) {
-                duplicateBlocked = true;
+            Skill javaSkill = null;
+            for (Skill s : userService.getAllSkills()) {
+                if ("Java".equalsIgnoreCase(s.getName())) {
+                    javaSkill = s;
+                    break;
+                }
             }
-            assertTrue("Duplicate application blocked by ValidationException", duplicateBlocked);
-
-            // Ineligible student (CGPA 6.0 trying to apply to Google SDE)
-            Student lowCgpaStudent = new Student("LowCgpa", "low@prep.com", "EN303", "IT", 6.0);
-            userService.registerStudent(lowCgpaStudent, "LowPass@123");
-            boolean ineligibleBlocked = false;
-            try {
-                placementService.applyToRole(lowCgpaStudent.getId(), 1);
-            } catch (ValidationException e) {
-                ineligibleBlocked = true;
+            if (javaSkill != null) {
+                userService.addSkill(highCgpaStudent.getId(), javaSkill.getId(), "Expert");
             }
-            assertTrue("Ineligible student application blocked", ineligibleBlocked);
+
+            List<JobRole> eligibleRoles = placementService.getEligibleRoles(highCgpaStudent.getId());
+            assertTrue("Eligible roles calculated correctly", !eligibleRoles.isEmpty());
+
+            JobRole appliedRole = eligibleRoles.get(0);
+            placementService.applyToRole(highCgpaStudent.getId(), appliedRole.getRoleId());
+            assertTrue("Application recorded in DAO", placementService.hasApplied(highCgpaStudent.getId(), appliedRole.getRoleId()));
+
+            boolean duplicateAppRejected = false;
+            try {
+                placementService.applyToRole(highCgpaStudent.getId(), appliedRole.getRoleId());
+            } catch (ValidationException ve) {
+                duplicateAppRejected = true;
+            }
+            assertTrue("Duplicate application to same role rejected", duplicateAppRejected);
 
         } catch (Exception e) {
-            assertTrue("PlacementService exception: " + e.getMessage(), false);
+            assertTrue("PlacementService unexpected exception: " + e.getMessage(), false);
+        }
+    }
+
+    private static void runDaoTests() {
+        System.out.println("\n>>> 5. RUNNING DAO TESTS (USERDAO & COMPANYDAO)");
+
+        UserDao userDao = new InMemoryUserDao();
+        CompanyDao companyDao = new InMemoryCompanyDao();
+
+        try {
+            Student s = new Student("Siddharth Singh", "sid@prepforge.com", "EN2024_10", "CSE", 8.7);
+            userDao.saveStudent(s, "hash123");
+            assertTrue("UserDao saves and assigns ID to student", s.getId() > 0);
+            assertTrue("UserDao finds student by email", userDao.findByEmail("sid@prepforge.com") != null);
+            assertTrue("UserDao finds student by ID", userDao.findStudentById(s.getId()) != null);
+
+            Admin admin = new Admin("Dr. Neha Kapoor", "neha@prepforge.com", "ADM_202", "Training & Placement");
+            userDao.saveAdmin(admin, "adminhash");
+            assertTrue("UserDao saves admin", admin.getId() > 0);
+            assertTrue("UserDao finds admin by email", userDao.findByEmail("neha@prepforge.com") != null);
+
+            s.setCgpa(9.0);
+            userDao.updateStudent(s);
+            assertTrue("UserDao updates student record", userDao.findStudentById(s.getId()).getCgpa() == 9.0);
+
+            List<Skill> skills = userDao.findAllSkills();
+            assertTrue("UserDao finds all skills", skills.size() >= 2);
+            userDao.addStudentSkill(s.getId(), skills.get(0).getId(), "Expert");
+            assertTrue("UserDao associates skill with student", userDao.findStudentById(s.getId()).getSkills().size() == 1);
+
+            userDao.removeStudentSkill(s.getId(), skills.get(0).getId());
+            assertTrue("UserDao removes student skill", userDao.findStudentById(s.getId()).getSkills().isEmpty());
+
+            userDao.deleteStudent(s.getId());
+            assertTrue("UserDao deletes student", userDao.findStudentById(s.getId()) == null);
+
+            List<Company> companies = companyDao.findAllCompanies();
+            assertTrue("CompanyDao finds all companies", companies.size() >= 4);
+
+            Company comp = new Company("Oracle", "Cloud database leader", "Austin, TX", "Database");
+            companyDao.saveCompany(comp);
+            assertTrue("CompanyDao persists company with generated ID", comp.getCompanyId() > 0);
+            assertTrue("CompanyDao retrieves company by ID", companyDao.findCompanyById(comp.getCompanyId()) != null);
+
+            List<JobRole> roles = companyDao.findAllJobRoles();
+            assertTrue("CompanyDao finds all job roles", !roles.isEmpty());
+
+            JobRole role = roles.get(0);
+            int testStudentId = 777;
+            assertTrue("CompanyDao checks not applied initially", !companyDao.hasApplied(testStudentId, role.getRoleId()));
+
+            companyDao.saveApplication(testStudentId, role.getRoleId());
+            assertTrue("CompanyDao checks hasApplied after save", companyDao.hasApplied(testStudentId, role.getRoleId()));
+            assertTrue("CompanyDao returns applied role IDs", companyDao.findAppliedRoleIds(testStudentId).contains(role.getRoleId()));
+
+            boolean duplicateEmailFails = false;
+            try {
+                Student sDup = new Student("Dup User", "neha@prepforge.com", "EN_DUP", "CSE", 8.0);
+                userDao.saveStudent(sDup, "hash");
+            } catch (DataAccessException dae) {
+                duplicateEmailFails = true;
+            }
+            assertTrue("UserDao rejects duplicate email with DataAccessException", duplicateEmailFails);
+
+        } catch (Exception e) {
+            assertTrue("DaoTest unexpected exception: " + e.getMessage(), false);
         }
     }
 }

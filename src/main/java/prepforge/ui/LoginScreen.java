@@ -5,8 +5,19 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -17,15 +28,6 @@ import prepforge.model.Student;
 import prepforge.model.User;
 import prepforge.service.UserService;
 
-/**
- * UI Screen: LoginScreen
- * 
- * Contract Owner: Member 4 (UI & Integration)
- * 
- * Handles user authentication, student registration, and admin registration.
- * Routes authenticated users polymorphically to StudentScreen or AdminScreen.
- * Executes database operations asynchronously within JavaFX Task workers.
- */
 public class LoginScreen {
 
     private final Main mainApp;
@@ -40,7 +42,6 @@ public class LoginScreen {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #f1f5f9;");
 
-        // ---------------- Left Hero Pane ----------------
         VBox heroPane = new VBox(20);
         heroPane.setPrefWidth(380);
         heroPane.setPadding(new Insets(40));
@@ -54,340 +55,336 @@ public class LoginScreen {
         logoLabel.setFont(Font.font("SansSerif", FontWeight.BOLD, 36));
         logoLabel.setTextFill(Color.WHITE);
 
-        Label tagline = new Label("Your Intelligent Gateway to Campus Placement Success.");
+        Label tagline = new Label("Your Gateway to Campus Placement Success.");
         tagline.setFont(Font.font("SansSerif", FontWeight.NORMAL, 16));
         tagline.setTextFill(Color.web("#e0e7ff"));
         tagline.setWrapText(true);
 
-        VBox featureList = new VBox(14);
-        featureList.setPadding(new Insets(20, 0, 0, 0));
-        featureList.getChildren().addAll(
-                createFeatureRow("✓", "Real-Time Company Placement Eligibility Matching"),
-                createFeatureRow("✓", "Adaptive Mock Interviews with Automated Grading"),
-                createFeatureRow("✓", "Weak-Skill Diagnostics (<50% Threshold) & Growth Plans"),
-                createFeatureRow("✓", "Cryptographic Security (PBKDF2 SHA-256 Hashing)")
-        );
+        VBox featuresBox = new VBox(12);
+        featuresBox.setPadding(new Insets(30, 0, 0, 0));
 
-        heroPane.getChildren().addAll(brandBadge, logoLabel, tagline, featureList);
+        Label f1 = createFeatureBullet("Academic Profile & Skills Management");
+        Label f2 = createFeatureBullet("Automated Corporate Eligibility Checking");
+        Label f3 = createFeatureBullet("Enterprise Placement Cell Administration");
+        featuresBox.getChildren().addAll(f1, f2, f3);
 
-        // ---------------- Right Content Pane (TabPane) ----------------
-        VBox centerCard = new VBox(15);
-        centerCard.setAlignment(Pos.CENTER);
-        centerCard.setPadding(new Insets(40, 60, 40, 60));
+        heroPane.getChildren().addAll(brandBadge, logoLabel, tagline, featuresBox);
 
-        TabPane authTabs = new TabPane();
-        authTabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-        authTabs.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 15, 0, 0, 4);");
+        TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        tabPane.setStyle("-fx-background-color: white;");
 
-        Tab loginTab = new Tab("Sign In", createLoginForm());
-        Tab studentRegTab = new Tab("Register Student", createStudentRegisterForm());
-        Tab adminRegTab = new Tab("Register Admin", createAdminRegisterForm());
+        Tab loginTab = new Tab("Sign In", buildLoginForm());
+        Tab registerStudentTab = new Tab("Student Registration", buildStudentRegistrationForm());
+        Tab registerAdminTab = new Tab("Admin Registration", buildAdminRegistrationForm());
 
-        authTabs.getTabs().addAll(loginTab, studentRegTab, adminRegTab);
-        centerCard.getChildren().add(authTabs);
+        tabPane.getTabs().addAll(loginTab, registerStudentTab, registerAdminTab);
 
         root.setLeft(heroPane);
-        root.setCenter(centerCard);
+        root.setCenter(tabPane);
 
         return root;
     }
 
-    private HBox createFeatureRow(String icon, String text) {
-        HBox row = new HBox(10);
-        row.setAlignment(Pos.CENTER_LEFT);
-        Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-text-fill: #93c5fd; -fx-font-weight: bold; -fx-font-size: 14px;");
-        Label textLabel = new Label(text);
-        textLabel.setStyle("-fx-text-fill: #f8fafc; -fx-font-size: 13px;");
-        textLabel.setWrapText(true);
-        row.getChildren().addAll(iconLabel, textLabel);
-        return row;
+    private Label createFeatureBullet(String text) {
+        Label bullet = new Label("•  " + text);
+        bullet.setTextFill(Color.web("#dbeafe"));
+        bullet.setFont(Font.font("SansSerif", 13));
+        return bullet;
     }
 
-    // ---------------- 1. Sign In Form ----------------
-    private VBox createLoginForm() {
-        VBox form = new VBox(16);
-        form.setPadding(new Insets(30));
+    private VBox buildLoginForm() {
+        VBox form = new VBox(18);
+        form.setPadding(new Insets(50, 60, 50, 60));
         form.setAlignment(Pos.CENTER_LEFT);
+        form.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("Welcome Back");
-        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
-        title.setStyle("-fx-text-fill: #1e293b;");
+        Label header = new Label("Sign In to PrepForge");
+        header.setFont(Font.font("SansSerif", FontWeight.BOLD, 24));
+        header.setTextFill(Color.web("#0f172a"));
 
-        Label subtitle = new Label("Enter your credentials to access your PrepForge portal");
-        subtitle.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
+        Label subHeader = new Label("Enter your credentials to access your portal.");
+        subHeader.setTextFill(Color.web("#64748b"));
+        subHeader.setFont(Font.font("SansSerif", 13));
 
+        VBox emailBox = new VBox(6);
+        Label emailLabel = new Label("Email Address");
+        emailLabel.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 12));
+        emailLabel.setTextFill(Color.web("#334155"));
         TextField emailField = new TextField();
-        emailField.setPromptText("student@college.edu or admin@prepforge.com");
-        styleInput(emailField);
+        emailField.setPromptText("e.g. rahul@prepforge.com");
+        emailField.setPrefHeight(40);
+        emailField.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 0 10;");
+        emailBox.getChildren().addAll(emailLabel, emailField);
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Enter your password");
-        styleInput(passwordField);
+        VBox passBox = new VBox(6);
+        Label passLabel = new Label("Password");
+        passLabel.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 12));
+        passLabel.setTextFill(Color.web("#334155"));
+        PasswordField passField = new PasswordField();
+        passField.setPromptText("Enter your secret password");
+        passField.setPrefHeight(40);
+        passField.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 0 10;");
+        passBox.getChildren().addAll(passLabel, passField);
+
+        Button loginBtn = new Button("Sign In");
+        loginBtn.setPrefHeight(42);
+        loginBtn.setMaxWidth(Double.MAX_VALUE);
+        loginBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
 
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setVisible(false);
-        spinner.setPrefSize(22, 22);
-
-        Button loginBtn = new Button("Sign In to Portal");
-        stylePrimaryButton(loginBtn);
+        spinner.setPrefSize(26, 26);
 
         HBox btnBox = new HBox(12, loginBtn, spinner);
+        HBox.setHgrow(loginBtn, Priority.ALWAYS);
         btnBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label hintLabel = new Label("Quick Test: Register a new student or use an existing test account.");
-        hintLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 11px; -fx-font-style: italic;");
-
         loginBtn.setOnAction(e -> {
-            String email = emailField.getText();
-            String password = passwordField.getText();
+            String email = emailField.getText() != null ? emailField.getText().trim() : "";
+            String pass = passField.getText();
 
-            spinner.setVisible(true);
             loginBtn.setDisable(true);
+            spinner.setVisible(true);
 
-            // Execute database/hashing operations in background Task (No UI freezing)
             Task<User> loginTask = new Task<>() {
                 @Override
                 protected User call() throws Exception {
-                    return userService.login(email, password);
+                    return userService.login(email, pass);
                 }
             };
 
-            loginTask.setOnSucceeded(workerEvent -> {
-                spinner.setVisible(false);
+            loginTask.setOnSucceeded(workerStateEvent -> {
                 loginBtn.setDisable(false);
+                spinner.setVisible(false);
                 User user = loginTask.getValue();
-
-                // Polymorphic routing based on User Role
-                if ("ADMIN".equalsIgnoreCase(user.getRole()) && user instanceof Admin) {
-                    mainApp.showAdminScreen((Admin) user);
-                } else if (user instanceof Student) {
+                if (user instanceof Student) {
                     mainApp.showStudentScreen((Student) user);
+                } else if (user instanceof Admin) {
+                    mainApp.showAdminScreen((Admin) user);
                 } else {
-                    Main.showErrorAlert("Login Error", "Unknown account role: " + user.getRole());
+                    mainApp.showAlert(Alert.AlertType.INFORMATION, "Login Successful", "Welcome, " + user.getName());
                 }
             });
 
-            loginTask.setOnFailed(workerEvent -> {
-                spinner.setVisible(false);
+            loginTask.setOnFailed(workerStateEvent -> {
                 loginBtn.setDisable(false);
-                Throwable ex = loginTask.getException();
-                Main.showErrorAlert("Sign In Failed", ex.getMessage());
+                spinner.setVisible(false);
+                Throwable err = loginTask.getException();
+                String msg = (err instanceof PrepForgeException) ? err.getMessage() : "Authentication failed: " + err.getMessage();
+                mainApp.showAlert(Alert.AlertType.ERROR, "Login Error", msg);
             });
 
-            new Thread(loginTask).start();
+            Thread th = new Thread(loginTask);
+            th.setDaemon(true);
+            th.start();
         });
 
-        form.getChildren().addAll(title, subtitle, new Label("Email Address:"), emailField,
-                new Label("Password:"), passwordField, btnBox, hintLabel);
+        form.getChildren().addAll(header, subHeader, emailBox, passBox, btnBox);
         return form;
     }
 
-    // ---------------- 2. Student Registration Form ----------------
-    private VBox createStudentRegisterForm() {
-        VBox form = new VBox(12);
-        form.setPadding(new Insets(24));
+    private VBox buildStudentRegistrationForm() {
+        VBox form = new VBox(14);
+        form.setPadding(new Insets(30, 60, 30, 60));
         form.setAlignment(Pos.CENTER_LEFT);
+        form.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("Create Student Account");
-        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 20));
-        title.setStyle("-fx-text-fill: #1e293b;");
+        Label header = new Label("Register as Student");
+        header.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
+        header.setTextFill(Color.web("#0f172a"));
 
-        TextField nameField = new TextField();
-        nameField.setPromptText("Full Name");
-        styleInput(nameField);
+        Label subHeader = new Label("Create your profile to prepare for campus drives.");
+        subHeader.setTextFill(Color.web("#64748b"));
 
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email (e.g. rahul@college.edu)");
-        styleInput(emailField);
-
-        PasswordField passField = new PasswordField();
-        passField.setPromptText("Password (at least 6 characters)");
-        styleInput(passField);
-
-        TextField enrollField = new TextField();
-        enrollField.setPromptText("Enrollment Number (e.g. EN2024_001)");
-        styleInput(enrollField);
+        TextField nameField = createStyledTextField("Full Name (e.g. Rahul Verma)");
+        TextField emailField = createStyledTextField("College Email (e.g. rahul@prepforge.com)");
+        PasswordField passField = createStyledPasswordField("Password (min 6 characters)");
+        TextField enrollField = createStyledTextField("Enrollment Number (e.g. EN2024_08)");
 
         ComboBox<String> branchCombo = new ComboBox<>();
         branchCombo.getItems().addAll("Computer Science & Engineering", "Information Technology",
-                "Electronics & Communication", "Mechanical Engineering", "Civil Engineering");
+                "Electronics & Communication", "Mechanical Engineering", "Electrical Engineering");
         branchCombo.setValue("Computer Science & Engineering");
+        branchCombo.setPrefHeight(38);
         branchCombo.setMaxWidth(Double.MAX_VALUE);
 
-        TextField cgpaField = new TextField();
-        cgpaField.setPromptText("Current CGPA (0.0 to 10.0, e.g. 8.4)");
-        styleInput(cgpaField);
+        TextField cgpaField = createStyledTextField("Cumulative GPA (0.00 - 10.00, e.g. 8.50)");
 
-        Button registerBtn = new Button("Register as Student");
-        stylePrimaryButton(registerBtn);
+        Button registerBtn = new Button("Register Student Account");
+        registerBtn.setPrefHeight(42);
+        registerBtn.setMaxWidth(Double.MAX_VALUE);
+        registerBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
 
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setVisible(false);
-        spinner.setPrefSize(22, 22);
+        spinner.setPrefSize(24, 24);
+
+        HBox actionBox = new HBox(12, registerBtn, spinner);
+        HBox.setHgrow(registerBtn, Priority.ALWAYS);
 
         registerBtn.setOnAction(e -> {
+            String name = nameField.getText() != null ? nameField.getText().trim() : "";
+            String email = emailField.getText() != null ? emailField.getText().trim() : "";
+            String pass = passField.getText();
+            String enroll = enrollField.getText() != null ? enrollField.getText().trim() : "";
+            String branch = branchCombo.getValue();
+            String cgpaStr = cgpaField.getText() != null ? cgpaField.getText().trim() : "";
+
+            double cgpa;
             try {
-                String name = nameField.getText();
-                String email = emailField.getText();
-                String pass = passField.getText();
-                String enroll = enrollField.getText();
-                String branch = branchCombo.getValue();
-                double cgpa = Double.parseDouble(cgpaField.getText().trim());
-
-                Student student = new Student(name, email, enroll, branch, cgpa);
-
-                spinner.setVisible(true);
-                registerBtn.setDisable(true);
-
-                Task<Void> regTask = new Task<>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        userService.registerStudent(student, pass);
-                        return null;
-                    }
-                };
-
-                regTask.setOnSucceeded(ev -> {
-                    spinner.setVisible(false);
-                    registerBtn.setDisable(false);
-                    Main.showSuccessAlert("Registration Successful", "Your student account has been created!\nPlease sign in.");
-                    nameField.clear();
-                    emailField.clear();
-                    passField.clear();
-                    enrollField.clear();
-                    cgpaField.clear();
-                });
-
-                regTask.setOnFailed(ev -> {
-                    spinner.setVisible(false);
-                    registerBtn.setDisable(false);
-                    Main.showErrorAlert("Registration Failed", regTask.getException().getMessage());
-                });
-
-                new Thread(regTask).start();
-
-            } catch (NumberFormatException nfe) {
-                Main.showErrorAlert("Invalid Input", "Please enter a valid numeric CGPA (e.g. 8.5).");
-            } catch (Exception ex) {
-                Main.showErrorAlert("Input Error", ex.getMessage());
+                cgpa = Double.parseDouble(cgpaStr);
+            } catch (NumberFormatException ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Input Error", "CGPA must be a valid numeric decimal (e.g. 8.5).");
+                return;
             }
+
+            registerBtn.setDisable(true);
+            spinner.setVisible(true);
+
+            Task<Void> regTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    Student student = new Student(name, email, enroll, branch, cgpa);
+                    userService.registerStudent(student, pass);
+                    return null;
+                }
+            };
+
+            regTask.setOnSucceeded(event -> {
+                registerBtn.setDisable(false);
+                spinner.setVisible(false);
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Registration Successful",
+                        "Account created successfully for " + name + "! Please sign in with your credentials.");
+                nameField.clear();
+                emailField.clear();
+                passField.clear();
+                enrollField.clear();
+                cgpaField.clear();
+            });
+
+            regTask.setOnFailed(event -> {
+                registerBtn.setDisable(false);
+                spinner.setVisible(false);
+                Throwable err = regTask.getException();
+                String msg = (err instanceof PrepForgeException) ? err.getMessage() : "Registration failed: " + err.getMessage();
+                mainApp.showAlert(Alert.AlertType.ERROR, "Registration Error", msg);
+            });
+
+            Thread th = new Thread(regTask);
+            th.setDaemon(true);
+            th.start();
         });
 
-        HBox btnBox = new HBox(12, registerBtn, spinner);
-        form.getChildren().addAll(title,
-                new Label("Full Name:"), nameField,
-                new Label("College Email:"), emailField,
-                new Label("Password:"), passField,
-                new Label("Enrollment Number:"), enrollField,
-                new Label("Academic Branch:"), branchCombo,
-                new Label("Current CGPA:"), cgpaField,
-                btnBox);
+        form.getChildren().addAll(header, subHeader,
+                new Label("Full Name"), nameField,
+                new Label("Email Address"), emailField,
+                new Label("Password"), passField,
+                new Label("Enrollment Number"), enrollField,
+                new Label("Department / Branch"), branchCombo,
+                new Label("Current CGPA"), cgpaField,
+                actionBox);
         return form;
     }
 
-    // ---------------- 3. Admin Registration Form ----------------
-    private VBox createAdminRegisterForm() {
+    private VBox buildAdminRegistrationForm() {
         VBox form = new VBox(14);
-        form.setPadding(new Insets(24));
+        form.setPadding(new Insets(30, 60, 30, 60));
         form.setAlignment(Pos.CENTER_LEFT);
+        form.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("Register Placement Administrator");
-        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 20));
-        title.setStyle("-fx-text-fill: #1e293b;");
+        Label header = new Label("Register Placement Officer");
+        header.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
+        header.setTextFill(Color.web("#0f172a"));
 
-        TextField nameField = new TextField();
-        nameField.setPromptText("Officer Name (e.g. Dr. Verma)");
-        styleInput(nameField);
+        Label subHeader = new Label("Create an administrative account for company and placement management.");
+        subHeader.setTextFill(Color.web("#64748b"));
 
-        TextField emailField = new TextField();
-        emailField.setPromptText("Official Email");
-        styleInput(emailField);
+        TextField nameField = createStyledTextField("Full Name (e.g. Dr. A. P. Sharma)");
+        TextField emailField = createStyledTextField("Official Email (e.g. admin@prepforge.com)");
+        PasswordField passField = createStyledPasswordField("Password (min 6 characters)");
+        TextField empIdField = createStyledTextField("Employee ID (e.g. TPO_101)");
+        TextField deptField = createStyledTextField("Department (e.g. Training & Placement Cell)");
 
-        PasswordField passField = new PasswordField();
-        passField.setPromptText("Master Password");
-        styleInput(passField);
-
-        TextField deptField = new TextField("Training and Placement Cell (TPO)");
-        styleInput(deptField);
-
-        TextField codeField = new TextField();
-        codeField.setPromptText("Employee / Faculty Code (e.g. TPO_101)");
-        styleInput(codeField);
-
-        Button registerBtn = new Button("Register as Admin");
-        stylePrimaryButton(registerBtn);
+        Button registerBtn = new Button("Register Administrator");
+        registerBtn.setPrefHeight(42);
+        registerBtn.setMaxWidth(Double.MAX_VALUE);
+        registerBtn.setStyle("-fx-background-color: #4338ca; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
 
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setVisible(false);
-        spinner.setPrefSize(22, 22);
+        spinner.setPrefSize(24, 24);
+
+        HBox actionBox = new HBox(12, registerBtn, spinner);
+        HBox.setHgrow(registerBtn, Priority.ALWAYS);
 
         registerBtn.setOnAction(e -> {
-            try {
-                String name = nameField.getText();
-                String email = emailField.getText();
-                String pass = passField.getText();
-                String dept = deptField.getText();
-                String code = codeField.getText();
+            String name = nameField.getText() != null ? nameField.getText().trim() : "";
+            String email = emailField.getText() != null ? emailField.getText().trim() : "";
+            String pass = passField.getText();
+            String empId = empIdField.getText() != null ? empIdField.getText().trim() : "";
+            String dept = deptField.getText() != null ? deptField.getText().trim() : "";
 
-                Admin admin = new Admin(name, email, dept, code);
+            registerBtn.setDisable(true);
+            spinner.setVisible(true);
 
-                spinner.setVisible(true);
-                registerBtn.setDisable(true);
+            Task<Void> regTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    Admin admin = new Admin(name, email, empId, dept);
+                    userService.registerAdmin(admin, pass);
+                    return null;
+                }
+            };
 
-                Task<Void> regTask = new Task<>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        userService.registerAdmin(admin, pass);
-                        return null;
-                    }
-                };
+            regTask.setOnSucceeded(event -> {
+                registerBtn.setDisable(false);
+                spinner.setVisible(false);
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Registration Successful",
+                        "Administrator account created successfully! Please sign in with your credentials.");
+                nameField.clear();
+                emailField.clear();
+                passField.clear();
+                empIdField.clear();
+                deptField.clear();
+            });
 
-                regTask.setOnSucceeded(ev -> {
-                    spinner.setVisible(false);
-                    registerBtn.setDisable(false);
-                    Main.showSuccessAlert("Admin Created", "Administrator profile created successfully! You may now sign in.");
-                    nameField.clear();
-                    emailField.clear();
-                    passField.clear();
-                    codeField.clear();
-                });
+            regTask.setOnFailed(event -> {
+                registerBtn.setDisable(false);
+                spinner.setVisible(false);
+                Throwable err = regTask.getException();
+                String msg = (err instanceof PrepForgeException) ? err.getMessage() : "Registration failed: " + err.getMessage();
+                mainApp.showAlert(Alert.AlertType.ERROR, "Registration Error", msg);
+            });
 
-                regTask.setOnFailed(ev -> {
-                    spinner.setVisible(false);
-                    registerBtn.setDisable(false);
-                    Main.showErrorAlert("Registration Failed", regTask.getException().getMessage());
-                });
-
-                new Thread(regTask).start();
-
-            } catch (Exception ex) {
-                Main.showErrorAlert("Input Error", ex.getMessage());
-            }
+            Thread th = new Thread(regTask);
+            th.setDaemon(true);
+            th.start();
         });
 
-        HBox btnBox = new HBox(12, registerBtn, spinner);
-        form.getChildren().addAll(title,
-                new Label("Official Name:"), nameField,
-                new Label("Official Email:"), emailField,
-                new Label("Password:"), passField,
-                new Label("Department:"), deptField,
-                new Label("Employee Code:"), codeField,
-                btnBox);
+        form.getChildren().addAll(header, subHeader,
+                new Label("Full Name"), nameField,
+                new Label("Official Email"), emailField,
+                new Label("Password"), passField,
+                new Label("Employee ID"), empIdField,
+                new Label("Department"), deptField,
+                actionBox);
         return form;
     }
 
-    // ---------------- Styling Helpers ----------------
-
-    private void styleInput(TextField tf) {
+    private TextField createStyledTextField(String prompt) {
+        TextField tf = new TextField();
+        tf.setPromptText(prompt);
         tf.setPrefHeight(38);
-        tf.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;");
+        tf.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 0 10;");
+        return tf;
     }
 
-    private void stylePrimaryButton(Button btn) {
-        btn.setPrefHeight(40);
-        btn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand; -fx-font-size: 13px;");
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand; -fx-font-size: 13px;"));
-        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 20; -fx-cursor: hand; -fx-font-size: 13px;"));
+    private PasswordField createStyledPasswordField(String prompt) {
+        PasswordField pf = new PasswordField();
+        pf.setPromptText(prompt);
+        pf.setPrefHeight(38);
+        pf.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 0 10;");
+        return pf;
     }
 }

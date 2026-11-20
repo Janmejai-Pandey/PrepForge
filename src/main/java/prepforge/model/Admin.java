@@ -1,20 +1,10 @@
 package prepforge.model;
 
-/**
- * Subclass: Admin
- * 
- * Demonstrates:
- * 1. INHERITANCE: Extends User to represent placement cell coordinators and staff.
- * 2. POLYMORPHISM: Overrides getRole() to return "ADMIN" and showMenu() for admin choices.
- * 3. ENCAPSULATION: Private fields with public getters and setters.
- */
 public class Admin extends User {
 
-    // ---------------- Admin Specific Fields ----------------
     private String department;
     private String employeeCode;
 
-    // ---------------- Constructors (Overloading) ----------------
     public Admin() {
         super();
     }
@@ -31,24 +21,20 @@ public class Admin extends User {
         this.employeeCode = employeeCode;
     }
 
-    // ---------------- Method Overriding (Polymorphism) ----------------
     @Override
     public String getRole() {
-        return "ADMIN";
+        return "Admin";
     }
 
     @Override
     public void showMenu() {
-        System.out.println("=== ADMIN / PLACEMENT CELL MENU ===");
         System.out.println("1. Manage Companies");
-        System.out.println("2. Post Job Openings");
-        System.out.println("3. View All Students");
-        System.out.println("4. Delete Inactive Student");
-        System.out.println("5. Manage System Skills");
-        System.out.println("6. Logout");
+        System.out.println("2. Post Roles");
+        System.out.println("3. View Students");
+        System.out.println("4. Delete Student");
+        System.out.println("5. Logout");
     }
 
-    // ---------------- Getters and Setters ----------------
     public String getDepartment() {
         return department;
     }
@@ -67,7 +53,12 @@ public class Admin extends User {
 
     @Override
     public String toString() {
-        return "Admin [id=" + getId() + ", name=" + getName() + ", email=" + getEmail()
-                + ", department=" + department + ", employeeCode=" + employeeCode + "]";
+        return "Admin{" +
+                "id=" + getId() +
+                ", name='" + getName() + '\'' +
+                ", email='" + getEmail() + '\'' +
+                ", department='" + department + '\'' +
+                ", employeeCode='" + employeeCode + '\'' +
+                '}';
     }
 }
