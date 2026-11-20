@@ -1,0 +1,23 @@
+# Compiled class files & build artifacts
+target/
+bin/
+*.class
+
+# Database credentials & local properties
+db.properties
+*.local.properties
+
+# Log files
+*.log
+
+# IDE and Editor configurations
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+Thumbs.db
+.DS_Store
