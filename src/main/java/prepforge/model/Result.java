@@ -1,20 +1,17 @@
 package prepforge.model;
 
-/** Final result of one interview: score, percentage and grade. */
 public class Result {
 
-    private int id;                    // 0 until saved in the database
+    private int id;
     private final int interviewId;
     private final int studentId;
-    private final double totalScore;   // marks obtained
-    private final double maxScore;     // maximum possible marks
+    private final double totalScore;
+    private final double maxScore;
 
-    // Constructor for a new result
     public Result(int interviewId, int studentId, double totalScore, double maxScore) {
         this(0, interviewId, studentId, totalScore, maxScore);
     }
 
-    // Overloaded constructor for loading from the database
     public Result(int id, int interviewId, int studentId, double totalScore, double maxScore) {
         if (maxScore < 0 || totalScore < 0 || totalScore > maxScore) {
             throw new IllegalArgumentException("Invalid score values");
@@ -34,7 +31,6 @@ public class Result {
         return gradeFor(getPercentage());
     }
 
-    /** Grade bands. M2's SQL function fn_grade must use the same bands. */
     public static String gradeFor(double percentage) {
         if (percentage >= 90) return "A+";
         if (percentage >= 75) return "A";
@@ -43,12 +39,29 @@ public class Result {
         return "F";
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    public int getInterviewId() { return interviewId; }
-    public int getStudentId() { return studentId; }
-    public double getTotalScore() { return totalScore; }
-    public double getMaxScore() { return maxScore; }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getInterviewId() {
+        return interviewId;
+    }
+
+    public int getStudentId() {
+        return studentId;
+    }
+
+    public double getTotalScore() {
+        return totalScore;
+    }
+
+    public double getMaxScore() {
+        return maxScore;
+    }
 
     @Override
     public String toString() {

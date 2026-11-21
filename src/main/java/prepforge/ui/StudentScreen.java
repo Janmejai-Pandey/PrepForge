@@ -3,8 +3,6 @@ package prepforge.ui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -15,6 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -32,9 +31,13 @@ import javafx.scene.text.FontWeight;
 import prepforge.Main;
 import prepforge.exception.PrepForgeException;
 import prepforge.model.Company;
+import prepforge.model.Interview;
 import prepforge.model.JobRole;
+import prepforge.model.Result;
 import prepforge.model.Skill;
 import prepforge.model.Student;
+import prepforge.service.AnalyticsService;
+import prepforge.service.InterviewService;
 import prepforge.service.PlacementService;
 import prepforge.service.UserService;
 
@@ -44,16 +47,25 @@ public class StudentScreen {
     private final Student student;
     private final UserService userService;
     private final PlacementService placementService;
+    private final InterviewService interviewService;
+    private final AnalyticsService analyticsService;
 
     private TableView<SkillRow> skillsTable;
     private TableView<RoleRow> companiesTable;
+    private TableView<ResultRow> historyTable;
+    private TableView<SkillScoreRow> skillScoreTable;
+    private ListView<String> weakSkillsListView;
+    private ListView<String> recommendationsListView;
     private Label cgpaBadge;
 
-    public StudentScreen(Main mainApp, Student student, UserService userService, PlacementService placementService) {
+    public StudentScreen(Main mainApp, Student student, UserService userService, PlacementService placementService,
+                         InterviewService interviewService, AnalyticsService analyticsService) {
         this.mainApp = mainApp;
         this.student = student;
         this.userService = userService;
         this.placementService = placementService;
+        this.interviewService = interviewService;
+        this.analyticsService = analyticsService;
     }
 
     public Parent createView() {
@@ -93,13 +105,18 @@ public class StudentScreen {
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         Tab profileTab = new Tab("Profile & Skills", buildProfileAndSkillsTab());
-        Tab placementTab = new Tab("Companies & Placement Eligibility", buildCompaniesTab());
+        Tab interviewTab = new Tab("Start Interview", buildStartInterviewTab());
+        Tab historyTab = new Tab("History", buildHistoryTab());
+        Tab recsTab = new Tab("Recommendations", buildRecommendationsTab());
+        Tab placementTab = new Tab("Companies & Eligibility", buildCompaniesTab());
 
-        tabPane.getTabs().addAll(profileTab, placementTab);
+        tabPane.getTabs().addAll(profileTab, interviewTab, historyTab, recsTab, placementTab);
         root.setCenter(tabPane);
 
         loadSkillsData();
         loadCompaniesData();
+        loadHistoryData();
+        loadRecommendationsData();
 
         return root;
     }
@@ -266,6 +283,216 @@ public class StudentScreen {
         return container;
     }
 
+    private Parent buildStartInterviewTab() {
+        VBox container = new VBox(24);
+        container.setPadding(new Insets(32));
+        container.setAlignment(Pos.CENTER);
+
+        VBox card = new VBox(20);
+        card.setMaxWidth(560);
+        card.setPadding(new Insets(32));
+        card.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-background-radius: 10;");
+
+        Label title = new Label("Start Mock Assessment");
+        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
+        title.setTextFill(Color.web("#0f172a"));
+
+        Label desc = new Label("Configure your tailored mock interview session. Questions will be drawn from verified placement question banks across technical topics, coding, and behavioral HR domains.");
+        desc.setWrapText(true);
+        desc.setFont(Font.font("SansSerif", 13));
+        desc.setTextFill(Color.web("#64748b"));
+
+        VBox typeBox = new VBox(6);
+        Label typeLabel = new Label("Interview Domain / Track:");
+        typeLabel.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 13));
+        ComboBox<String> typeCombo = new ComboBox<>();
+        typeCombo.getItems().addAll("TECHNICAL", "HR", "MIXED");
+        typeCombo.setValue("TECHNICAL");
+        typeCombo.setMaxWidth(Double.MAX_VALUE);
+        typeBox.getChildren().addAll(typeLabel, typeCombo);
+
+        VBox diffBox = new VBox(6);
+        Label diffLabel = new Label("Target Difficulty:");
+        diffLabel.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 13));
+        ComboBox<String> diffCombo = new ComboBox<>();
+        diffCombo.getItems().addAll("EASY", "MEDIUM", "HARD");
+        diffCombo.setValue("EASY");
+        diffCombo.setMaxWidth(Double.MAX_VALUE);
+        diffBox.getChildren().addAll(diffLabel, diffCombo);
+
+        VBox countBox = new VBox(6);
+        Label countLabel = new Label("Number of Questions:");
+        countLabel.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 13));
+        ComboBox<Integer> countCombo = new ComboBox<>();
+        countCombo.getItems().addAll(2, 3, 5, 10);
+        countCombo.setValue(3);
+        countCombo.setMaxWidth(Double.MAX_VALUE);
+        countBox.getChildren().addAll(countLabel, countCombo);
+
+        Button startBtn = new Button("Launch Assessment");
+        startBtn.setMaxWidth(Double.MAX_VALUE);
+        startBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 12 0; -fx-font-size: 14px;");
+
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setVisible(false);
+        spinner.setPrefSize(28, 28);
+
+        HBox btnRow = new HBox(12, startBtn, spinner);
+        btnRow.setAlignment(Pos.CENTER);
+        HBox.setHgrow(startBtn, Priority.ALWAYS);
+
+        startBtn.setOnAction(e -> {
+            String type = typeCombo.getValue();
+            String diff = diffCombo.getValue();
+            int count = countCombo.getValue() != null ? countCombo.getValue() : 3;
+
+            startBtn.setDisable(true);
+            spinner.setVisible(true);
+
+            Task<Interview> task = new Task<>() {
+                @Override
+                protected Interview call() throws Exception {
+                    return interviewService.startInterview(student.getId(), type, diff, count);
+                }
+            };
+
+            task.setOnSucceeded(workerStateEvent -> {
+                startBtn.setDisable(false);
+                spinner.setVisible(false);
+                Interview interview = task.getValue();
+                mainApp.showInterviewScreen(interview, student);
+            });
+
+            task.setOnFailed(workerStateEvent -> {
+                startBtn.setDisable(false);
+                spinner.setVisible(false);
+                mainApp.showAlert(Alert.AlertType.ERROR, "Start Failed", task.getException().getMessage());
+            });
+
+            new Thread(task).start();
+        });
+
+        card.getChildren().addAll(title, desc, typeBox, diffBox, countBox, btnRow);
+        container.getChildren().add(card);
+        return container;
+    }
+
+    private Parent buildHistoryTab() {
+        VBox container = new VBox(16);
+        container.setPadding(new Insets(24));
+        container.setStyle("-fx-background-color: white;");
+
+        HBox header = new HBox(16);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("Assessment History & Transcripts");
+        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        title.setTextFill(Color.web("#0f172a"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button refreshBtn = new Button("Refresh History");
+        refreshBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> loadHistoryData());
+
+        header.getChildren().addAll(title, spacer, refreshBtn);
+
+        historyTable = new TableView<>();
+        historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<ResultRow, String> resIdCol = new TableColumn<>("Result ID");
+        resIdCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getId())));
+
+        TableColumn<ResultRow, String> intIdCol = new TableColumn<>("Interview ID");
+        intIdCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getInterviewId())));
+
+        TableColumn<ResultRow, String> scoreCol = new TableColumn<>("Score Obtained");
+        scoreCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f", d.getValue().getTotalScore())));
+
+        TableColumn<ResultRow, String> maxCol = new TableColumn<>("Max Score");
+        maxCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f", d.getValue().getMaxScore())));
+
+        TableColumn<ResultRow, String> pctCol = new TableColumn<>("Percentage");
+        pctCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f%%", d.getValue().getPercentage())));
+
+        TableColumn<ResultRow, String> gradeCol = new TableColumn<>("Grade");
+        gradeCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getGrade()));
+
+        historyTable.getColumns().addAll(resIdCol, intIdCol, scoreCol, maxCol, pctCol, gradeCol);
+        VBox.setVgrow(historyTable, Priority.ALWAYS);
+
+        container.getChildren().addAll(header, historyTable);
+        return container;
+    }
+
+    private Parent buildRecommendationsTab() {
+        VBox container = new VBox(20);
+        container.setPadding(new Insets(24));
+        container.setStyle("-fx-background-color: white;");
+
+        HBox header = new HBox(16);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("Diagnostics & AI Skill Recommendations");
+        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        title.setTextFill(Color.web("#0f172a"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button refreshBtn = new Button("Refresh Diagnostics");
+        refreshBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> loadRecommendationsData());
+
+        header.getChildren().addAll(title, spacer, refreshBtn);
+
+        HBox contentBox = new HBox(24);
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
+
+        VBox scoresBox = new VBox(12);
+        scoresBox.setPrefWidth(420);
+        Label scoresTitle = new Label("Skill Competency Scores");
+        scoresTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 15));
+        scoresTitle.setTextFill(Color.web("#1e293b"));
+
+        skillScoreTable = new TableView<>();
+        skillScoreTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<SkillScoreRow, String> skillCol = new TableColumn<>("Skill / Topic");
+        skillCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getSkill()));
+
+        TableColumn<SkillScoreRow, String> pctScoreCol = new TableColumn<>("Proficiency Score");
+        pctScoreCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f%%", d.getValue().getScore())));
+
+        skillScoreTable.getColumns().addAll(skillCol, pctScoreCol);
+        VBox.setVgrow(skillScoreTable, Priority.ALWAYS);
+        scoresBox.getChildren().addAll(scoresTitle, skillScoreTable);
+
+        VBox recsBox = new VBox(14);
+        HBox.setHgrow(recsBox, Priority.ALWAYS);
+
+        Label weakTitle = new Label("Identified Weak Areas (< 50%)");
+        weakTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
+        weakTitle.setTextFill(Color.web("#b91c1c"));
+
+        weakSkillsListView = new ListView<>();
+        weakSkillsListView.setPrefHeight(120);
+
+        Label recTitle = new Label("Targeted Remedial Recommendations");
+        recTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
+        recTitle.setTextFill(Color.web("#15803d"));
+
+        recommendationsListView = new ListView<>();
+        VBox.setVgrow(recommendationsListView, Priority.ALWAYS);
+
+        recsBox.getChildren().addAll(weakTitle, weakSkillsListView, recTitle, recommendationsListView);
+        contentBox.getChildren().addAll(scoresBox, recsBox);
+
+        container.getChildren().addAll(header, contentBox);
+        return container;
+    }
+
     private Parent buildCompaniesTab() {
         VBox container = new VBox(16);
         container.setPadding(new Insets(24));
@@ -420,6 +647,71 @@ public class StudentScreen {
         new Thread(task).start();
     }
 
+    private void loadHistoryData() {
+        Task<List<ResultRow>> task = new Task<>() {
+            @Override
+            protected List<ResultRow> call() throws Exception {
+                List<Result> results = interviewService.getHistory(student.getId());
+                List<ResultRow> rows = new ArrayList<>();
+                for (Result r : results) {
+                    rows.add(new ResultRow(r.getId(), r.getInterviewId(), r.getTotalScore(), r.getMaxScore(), r.getPercentage(), r.getGrade()));
+                }
+                return rows;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (historyTable != null) {
+                historyTable.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+        });
+
+        new Thread(task).start();
+    }
+
+    private void loadRecommendationsData() {
+        Task<DiagnosticData> task = new Task<>() {
+            @Override
+            protected DiagnosticData call() throws Exception {
+                Map<String, Double> skillScores = analyticsService.getSkillScores(student.getId());
+                List<String> weak = analyticsService.getWeakSkills(student.getId());
+                List<String> recs = analyticsService.getRecommendations(student.getId());
+                return new DiagnosticData(skillScores, weak, recs);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            DiagnosticData data = task.getValue();
+            if (skillScoreTable != null) {
+                List<SkillScoreRow> rows = new ArrayList<>();
+                for (Map.Entry<String, Double> entry : data.skillScores.entrySet()) {
+                    rows.add(new SkillScoreRow(entry.getKey(), entry.getValue()));
+                }
+                skillScoreTable.setItems(FXCollections.observableArrayList(rows));
+            }
+            if (weakSkillsListView != null) {
+                weakSkillsListView.setItems(FXCollections.observableArrayList(data.weakSkills.isEmpty() ? List.of("No weak skills detected (< 50%). Excellent performance!") : data.weakSkills));
+            }
+            if (recommendationsListView != null) {
+                recommendationsListView.setItems(FXCollections.observableArrayList(data.recommendations.isEmpty() ? List.of("Keep up the great work! Ready for placement drives.") : data.recommendations));
+            }
+        });
+
+        new Thread(task).start();
+    }
+
+    private static class DiagnosticData {
+        final Map<String, Double> skillScores;
+        final List<String> weakSkills;
+        final List<String> recommendations;
+
+        DiagnosticData(Map<String, Double> skillScores, List<String> weakSkills, List<String> recommendations) {
+            this.skillScores = skillScores;
+            this.weakSkills = weakSkills;
+            this.recommendations = recommendations;
+        }
+    }
+
     public static class SkillRow {
         private final int skillId;
         private final String name;
@@ -466,5 +758,43 @@ public class StudentScreen {
         public String getRequiredSkillsStr() { return requiredSkillsStr; }
         public boolean isEligible() { return eligible; }
         public boolean isApplied() { return applied; }
+    }
+
+    public static class ResultRow {
+        private final int id;
+        private final int interviewId;
+        private final double totalScore;
+        private final double maxScore;
+        private final double percentage;
+        private final String grade;
+
+        public ResultRow(int id, int interviewId, double totalScore, double maxScore, double percentage, String grade) {
+            this.id = id;
+            this.interviewId = interviewId;
+            this.totalScore = totalScore;
+            this.maxScore = maxScore;
+            this.percentage = percentage;
+            this.grade = grade;
+        }
+
+        public int getId() { return id; }
+        public int getInterviewId() { return interviewId; }
+        public double getTotalScore() { return totalScore; }
+        public double getMaxScore() { return maxScore; }
+        public double getPercentage() { return percentage; }
+        public String getGrade() { return grade; }
+    }
+
+    public static class SkillScoreRow {
+        private final String skill;
+        private final double score;
+
+        public SkillScoreRow(String skill, double score) {
+            this.skill = skill;
+            this.score = score;
+        }
+
+        public String getSkill() { return skill; }
+        public double getScore() { return score; }
     }
 }

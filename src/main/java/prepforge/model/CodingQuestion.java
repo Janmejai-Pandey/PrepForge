@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Coding question with a problem statement, marked by keyword/pattern coverage. Worth 10 marks. */
 public class CodingQuestion extends Question implements KeywordBased {
 
     private final String problemStatement;
-    private final List<String> keywords;   // e.g. "for", "return", "stack" (lower case)
+    private final List<String> keywords;
 
     public CodingQuestion(int id, String text, String topic, String difficulty,
                           String problemStatement, List<String> keywords) {
@@ -31,18 +30,29 @@ public class CodingQuestion extends Question implements KeywordBased {
         this(0, text, topic, difficulty, problemStatement, keywords);
     }
 
-    public String getProblemStatement() { return problemStatement; }
+    public String getProblemStatement() {
+        return problemStatement;
+    }
+
     @Override
-    public List<String> getKeywords() { return Collections.unmodifiableList(keywords); }
+    public List<String> getKeywords() {
+        return Collections.unmodifiableList(keywords);
+    }
 
-    @Override public String getType() { return "CODING"; }
+    @Override
+    public String getType() {
+        return "CODING";
+    }
 
-    @Override public int getMaxMarks() { return 10; }
+    @Override
+    public int getMaxMarks() {
+        return 10;
+    }
 
     @Override
     public String display() {
         return "[Coding | " + getTopic() + " | " + getDifficulty() + "] " + getText()
-             + "\n  " + problemStatement
-             + "\n  (Write your code below)";
+                + "\n  " + problemStatement
+                + "\n  (Write your code below)";
     }
 }

@@ -1,8 +1,9 @@
 package prepforge.ui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import javafx.application.Platform;
+import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -28,12 +29,18 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import prepforge.Main;
-import prepforge.exception.PrepForgeException;
 import prepforge.model.Admin;
+import prepforge.model.CodingQuestion;
 import prepforge.model.Company;
+import prepforge.model.HRQuestion;
 import prepforge.model.JobRole;
+import prepforge.model.MCQQuestion;
+import prepforge.model.Question;
 import prepforge.model.Skill;
 import prepforge.model.Student;
+import prepforge.model.TechnicalQuestion;
+import prepforge.service.AnalyticsService;
+import prepforge.service.InterviewService;
 import prepforge.service.PlacementService;
 import prepforge.service.UserService;
 
@@ -43,15 +50,27 @@ public class AdminScreen {
     private final Admin admin;
     private final UserService userService;
     private final PlacementService placementService;
+    private final InterviewService interviewService;
+    private final AnalyticsService analyticsService;
 
     private TableView<Student> studentsTable;
+    private TableView<Question> questionsTable;
     private TableView<CompanyRoleRow> postingsTable;
+    private Label statStudents;
+    private Label statInterviews;
+    private Label statResults;
+    private Label statQuestions;
+    private Label statCompanies;
+    private Label statRoles;
 
-    public AdminScreen(Main mainApp, Admin admin, UserService userService, PlacementService placementService) {
+    public AdminScreen(Main mainApp, Admin admin, UserService userService, PlacementService placementService,
+                       InterviewService interviewService, AnalyticsService analyticsService) {
         this.mainApp = mainApp;
         this.admin = admin;
         this.userService = userService;
         this.placementService = placementService;
+        this.interviewService = interviewService;
+        this.analyticsService = analyticsService;
     }
 
     public Parent createView() {
@@ -91,13 +110,17 @@ public class AdminScreen {
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         Tab studentsTab = new Tab("Students Management", buildStudentsTab());
+        Tab questionsTab = new Tab("Question Bank", buildQuestionBankTab());
         Tab companiesTab = new Tab("Companies & Job Roles", buildCompaniesAndRolesTab());
+        Tab statsTab = new Tab("Platform Statistics", buildPlatformStatisticsTab());
 
-        tabPane.getTabs().addAll(studentsTab, companiesTab);
+        tabPane.getTabs().addAll(studentsTab, questionsTab, companiesTab, statsTab);
         root.setCenter(tabPane);
 
         loadStudentsData();
+        loadQuestionsData(null, null, null);
         loadPostingsData();
+        loadPlatformStatsData();
 
         return root;
     }
@@ -142,6 +165,7 @@ public class AdminScreen {
             task.setOnSucceeded(workerStateEvent -> {
                 mainApp.showAlert(Alert.AlertType.INFORMATION, "Success", "Student record deleted successfully.");
                 loadStudentsData();
+                loadPlatformStatsData();
             });
 
             task.setOnFailed(workerStateEvent -> {
@@ -178,6 +202,238 @@ public class AdminScreen {
         VBox.setVgrow(studentsTable, Priority.ALWAYS);
 
         container.getChildren().addAll(header, studentsTable);
+        return container;
+    }
+
+    private Parent buildQuestionBankTab() {
+        VBox container = new VBox(16);
+        container.setPadding(new Insets(24));
+        container.setStyle("-fx-background-color: white;");
+
+        HBox filterBar = new HBox(12);
+        filterBar.setAlignment(Pos.CENTER_LEFT);
+
+        TextField topicFilter = new TextField();
+        topicFilter.setPromptText("Filter by topic...");
+
+        ComboBox<String> diffFilter = new ComboBox<>();
+        diffFilter.getItems().addAll("All Difficulties", "EASY", "MEDIUM", "HARD");
+        diffFilter.setValue("All Difficulties");
+
+        ComboBox<String> typeFilter = new ComboBox<>();
+        typeFilter.getItems().addAll("All Types", "MCQ", "TECHNICAL", "CODING", "HR");
+        typeFilter.setValue("All Types");
+
+        Button searchBtn = new Button("Search");
+        searchBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+
+        searchBtn.setOnAction(e -> {
+            String topic = topicFilter.getText().trim();
+            String diff = "All Difficulties".equals(diffFilter.getValue()) ? null : diffFilter.getValue();
+            String type = "All Types".equals(typeFilter.getValue()) ? null : typeFilter.getValue();
+            loadQuestionsData(topic.isEmpty() ? null : topic, diff, type);
+        });
+
+        Region filterSpacer = new Region();
+        HBox.setHgrow(filterSpacer, Priority.ALWAYS);
+
+        Button deleteQBtn = new Button("Delete Selected Question");
+        deleteQBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+
+        deleteQBtn.setOnAction(e -> {
+            Question selected = questionsTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                mainApp.showAlert(Alert.AlertType.WARNING, "Selection Required", "Please select a question from the table.");
+                return;
+            }
+
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    interviewService.deleteQuestion(selected.getId());
+                    return null;
+                }
+            };
+
+            task.setOnSucceeded(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Success", "Question deleted from repository.");
+                loadQuestionsData(null, null, null);
+                loadPlatformStatsData();
+            });
+
+            task.setOnFailed(workerStateEvent -> {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Delete Failed", task.getException().getMessage());
+            });
+
+            new Thread(task).start();
+        });
+
+        filterBar.getChildren().addAll(new Label("Topic:"), topicFilter, new Label("Difficulty:"), diffFilter,
+                new Label("Type:"), typeFilter, searchBtn, filterSpacer, deleteQBtn);
+
+        questionsTable = new TableView<>();
+        questionsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Question, String> qIdCol = new TableColumn<>("ID");
+        qIdCol.setMaxWidth(60);
+        qIdCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getId())));
+
+        TableColumn<Question, String> qTypeCol = new TableColumn<>("Type");
+        qTypeCol.setMaxWidth(100);
+        qTypeCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getType()));
+
+        TableColumn<Question, String> qTopicCol = new TableColumn<>("Topic");
+        qTopicCol.setMaxWidth(130);
+        qTopicCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTopic()));
+
+        TableColumn<Question, String> qDiffCol = new TableColumn<>("Difficulty");
+        qDiffCol.setMaxWidth(100);
+        qDiffCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDifficulty()));
+
+        TableColumn<Question, String> qTextCol = new TableColumn<>("Question Statement");
+        qTextCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getText()));
+
+        TableColumn<Question, String> qMarksCol = new TableColumn<>("Max Marks");
+        qMarksCol.setMaxWidth(90);
+        qMarksCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getMaxMarks())));
+
+        questionsTable.getColumns().addAll(qIdCol, qTypeCol, qTopicCol, qDiffCol, qTextCol, qMarksCol);
+        VBox.setVgrow(questionsTable, Priority.ALWAYS);
+
+        VBox addForm = new VBox(10);
+        addForm.setPadding(new Insets(14));
+        addForm.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        Label formTitle = new Label("Add New Question to Bank");
+        formTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
+
+        HBox row1 = new HBox(12);
+        row1.setAlignment(Pos.CENTER_LEFT);
+
+        ComboBox<String> newType = new ComboBox<>();
+        newType.getItems().addAll("MCQ", "TECHNICAL", "CODING", "HR");
+        newType.setValue("MCQ");
+
+        TextField newTopic = new TextField();
+        newTopic.setPromptText("Topic (e.g. Java, DBMS, SQL)");
+
+        ComboBox<String> newDiff = new ComboBox<>();
+        newDiff.getItems().addAll("EASY", "MEDIUM", "HARD");
+        newDiff.setValue("EASY");
+
+        row1.getChildren().addAll(new Label("Type:"), newType, new Label("Topic:"), newTopic, new Label("Difficulty:"), newDiff);
+
+        TextField newText = new TextField();
+        newText.setPromptText("Question Text / Prompt...");
+
+        TextField extraField1 = new TextField();
+        extraField1.setPromptText("Options comma-separated: Option A, Option B, Option C, Option D");
+
+        TextField extraField2 = new TextField();
+        extraField2.setPromptText("Correct Option Index (0 for first, 1 for second, etc.)");
+
+        newType.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if ("MCQ".equals(newVal)) {
+                extraField1.setVisible(true);
+                extraField1.setManaged(true);
+                extraField1.setPromptText("Options comma-separated: Option A, Option B, Option C, Option D");
+                extraField2.setVisible(true);
+                extraField2.setManaged(true);
+                extraField2.setPromptText("Correct Option Index (0, 1, 2, 3)");
+            } else if ("CODING".equals(newVal)) {
+                extraField1.setVisible(true);
+                extraField1.setManaged(true);
+                extraField1.setPromptText("Problem Statement / Technical Constraints");
+                extraField2.setVisible(true);
+                extraField2.setManaged(true);
+                extraField2.setPromptText("Expected keywords comma-separated (e.g. hashmap, node, null)");
+            } else {
+                extraField1.setVisible(true);
+                extraField1.setManaged(true);
+                extraField1.setPromptText("Expected keywords comma-separated (e.g. encapsulation, polymorphism)");
+                extraField2.setVisible(false);
+                extraField2.setManaged(false);
+            }
+        });
+
+        Button addQBtn = new Button("Add Question");
+        addQBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 16;");
+
+        addQBtn.setOnAction(e -> {
+            String ty = newType.getValue();
+            String top = newTopic.getText().trim();
+            String dif = newDiff.getValue();
+            String txt = newText.getText().trim();
+
+            if (top.isEmpty() || txt.isEmpty()) {
+                mainApp.showAlert(Alert.AlertType.WARNING, "Validation", "Topic and Question text cannot be empty.");
+                return;
+            }
+
+            try {
+                Question q;
+                if ("MCQ".equals(ty)) {
+                    String[] opts = extraField1.getText().split(",");
+                    List<String> optList = new ArrayList<>();
+                    for (String o : opts) {
+                        if (!o.trim().isEmpty()) optList.add(o.trim());
+                    }
+                    int cIdx = Integer.parseInt(extraField2.getText().trim());
+                    q = new MCQQuestion(txt, top, dif, optList, cIdx);
+                } else if ("CODING".equals(ty)) {
+                    String prob = extraField1.getText().trim();
+                    String[] kws = extraField2.getText().split(",");
+                    List<String> kwList = new ArrayList<>();
+                    for (String k : kws) {
+                        if (!k.trim().isEmpty()) kwList.add(k.trim());
+                    }
+                    q = new CodingQuestion(txt, top, dif, prob, kwList);
+                } else if ("HR".equals(ty)) {
+                    String[] kws = extraField1.getText().split(",");
+                    List<String> kwList = new ArrayList<>();
+                    for (String k : kws) {
+                        if (!k.trim().isEmpty()) kwList.add(k.trim());
+                    }
+                    q = new HRQuestion(txt, top, dif, kwList);
+                } else {
+                    String[] kws = extraField1.getText().split(",");
+                    List<String> kwList = new ArrayList<>();
+                    for (String k : kws) {
+                        if (!k.trim().isEmpty()) kwList.add(k.trim());
+                    }
+                    q = new TechnicalQuestion(txt, top, dif, kwList);
+                }
+
+                Task<Void> task = new Task<>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        interviewService.addQuestion(q);
+                        return null;
+                    }
+                };
+
+                task.setOnSucceeded(workerStateEvent -> {
+                    mainApp.showAlert(Alert.AlertType.INFORMATION, "Success", "Question successfully added to repository.");
+                    newText.clear();
+                    extraField1.clear();
+                    extraField2.clear();
+                    loadQuestionsData(null, null, null);
+                    loadPlatformStatsData();
+                });
+
+                task.setOnFailed(workerStateEvent -> {
+                    mainApp.showAlert(Alert.AlertType.ERROR, "Add Failed", task.getException().getMessage());
+                });
+
+                new Thread(task).start();
+            } catch (Exception ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Input Error", ex.getMessage());
+            }
+        });
+
+        addForm.getChildren().addAll(formTitle, row1, newText, extraField1, extraField2, addQBtn);
+
+        container.getChildren().addAll(filterBar, questionsTable, addForm);
         return container;
     }
 
@@ -263,6 +519,7 @@ public class AdminScreen {
                 compSector.clear();
                 compLoc.clear();
                 loadPostingsData();
+                loadPlatformStatsData();
             });
 
             task.setOnFailed(ev -> {
@@ -325,6 +582,7 @@ public class AdminScreen {
                 roleTitle.clear();
                 minCgpa.clear();
                 loadPostingsData();
+                loadPlatformStatsData();
             });
 
             task.setOnFailed(ev -> {
@@ -341,6 +599,78 @@ public class AdminScreen {
         return container;
     }
 
+    private Parent buildPlatformStatisticsTab() {
+        VBox container = new VBox(24);
+        container.setPadding(new Insets(28));
+        container.setStyle("-fx-background-color: white;");
+
+        HBox header = new HBox(16);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("PrepForge Platform Analytics & Placement Health");
+        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        title.setTextFill(Color.web("#0f172a"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button refreshBtn = new Button("Refresh Platform Metrics");
+        refreshBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> loadPlatformStatsData());
+
+        header.getChildren().addAll(title, spacer, refreshBtn);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(20);
+        grid.setVgap(20);
+
+        statStudents = createStatValueLabel();
+        statInterviews = createStatValueLabel();
+        statResults = createStatValueLabel();
+        statQuestions = createStatValueLabel();
+        statCompanies = createStatValueLabel();
+        statRoles = createStatValueLabel();
+
+        VBox cardStudents = createStatCard("Registered Students", statStudents, "#2563eb", "#eff6ff");
+        VBox cardInterviews = createStatCard("Interviews Conducted", statInterviews, "#059669", "#ecfdf5");
+        VBox cardResults = createStatCard("Evaluated Submissions", statResults, "#7c3aed", "#f5f3ff");
+        VBox cardQuestions = createStatCard("Questions in Bank", statQuestions, "#d97706", "#fffbeb");
+        VBox cardCompanies = createStatCard("Recruiting Partners", statCompanies, "#0891b2", "#ecfeff");
+        VBox cardRoles = createStatCard("Active Placement Drives", statRoles, "#db2777", "#fdf2f8");
+
+        grid.add(cardStudents, 0, 0);
+        grid.add(cardInterviews, 1, 0);
+        grid.add(cardResults, 2, 0);
+        grid.add(cardQuestions, 0, 1);
+        grid.add(cardCompanies, 1, 1);
+        grid.add(cardRoles, 2, 1);
+
+        container.getChildren().addAll(header, grid);
+        return container;
+    }
+
+    private Label createStatValueLabel() {
+        Label lbl = new Label("0");
+        lbl.setFont(Font.font("SansSerif", FontWeight.BOLD, 36));
+        return lbl;
+    }
+
+    private VBox createStatCard(String labelText, Label valueLabel, String accentColor, String bgColor) {
+        VBox card = new VBox(8);
+        card.setPadding(new Insets(20));
+        card.setPrefWidth(280);
+        card.setStyle(String.format("-fx-background-color: %s; -fx-border-color: %s; -fx-border-radius: 8; -fx-background-radius: 8;", bgColor, accentColor));
+
+        Label title = new Label(labelText);
+        title.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 14));
+        title.setTextFill(Color.web("#475569"));
+
+        valueLabel.setTextFill(Color.web(accentColor));
+
+        card.getChildren().addAll(title, valueLabel);
+        return card;
+    }
+
     private void loadStudentsData() {
         Task<List<Student>> task = new Task<>() {
             @Override
@@ -352,6 +682,23 @@ public class AdminScreen {
         task.setOnSucceeded(e -> {
             if (studentsTable != null) {
                 studentsTable.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+        });
+
+        new Thread(task).start();
+    }
+
+    private void loadQuestionsData(String topic, String difficulty, String type) {
+        Task<List<Question>> task = new Task<>() {
+            @Override
+            protected List<Question> call() throws Exception {
+                return interviewService.searchQuestions(topic, difficulty, type);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (questionsTable != null) {
+                questionsTable.setItems(FXCollections.observableArrayList(task.getValue()));
             }
         });
 
@@ -385,6 +732,57 @@ public class AdminScreen {
         });
 
         new Thread(task).start();
+    }
+
+    private void loadPlatformStatsData() {
+        Task<PlatformMetrics> task = new Task<>() {
+            @Override
+            protected PlatformMetrics call() throws Exception {
+                Map<String, Integer> daoStats = analyticsService.getPlatformStats();
+                int studentCount = userService.getAllStudents().size();
+                int questionCount = interviewService.searchQuestions(null, null, null).size();
+                List<Company> comps = placementService.getAllCompanies();
+                int compCount = comps.size();
+                int roleCount = 0;
+                for (Company c : comps) {
+                    roleCount += c.getJobRoles().size();
+                }
+                int interviews = daoStats.getOrDefault("totalInterviews", 0);
+                int results = daoStats.getOrDefault("totalResults", 0);
+
+                return new PlatformMetrics(studentCount, interviews, results, questionCount, compCount, roleCount);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            PlatformMetrics m = task.getValue();
+            if (statStudents != null) statStudents.setText(String.valueOf(m.students));
+            if (statInterviews != null) statInterviews.setText(String.valueOf(m.interviews));
+            if (statResults != null) statResults.setText(String.valueOf(m.results));
+            if (statQuestions != null) statQuestions.setText(String.valueOf(m.questions));
+            if (statCompanies != null) statCompanies.setText(String.valueOf(m.companies));
+            if (statRoles != null) statRoles.setText(String.valueOf(m.roles));
+        });
+
+        new Thread(task).start();
+    }
+
+    private static class PlatformMetrics {
+        final int students;
+        final int interviews;
+        final int results;
+        final int questions;
+        final int companies;
+        final int roles;
+
+        PlatformMetrics(int students, int interviews, int results, int questions, int companies, int roles) {
+            this.students = students;
+            this.interviews = interviews;
+            this.results = results;
+            this.questions = questions;
+            this.companies = companies;
+            this.roles = roles;
+        }
     }
 
     public static class CompanyRoleRow {

@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** HR / behavioural question, marked by keyword coverage. Worth 5 marks. */
 public class HRQuestion extends Question implements KeywordBased {
 
-    private final List<String> keywords;   // stored in lower case
+    private final List<String> keywords;
 
-    public HRQuestion(int id, String text, String topic, String difficulty,
-                      List<String> keywords) {
+    public HRQuestion(int id, String text, String topic, String difficulty, List<String> keywords) {
         super(id, text, topic, difficulty);
         if (keywords == null || keywords.isEmpty()) {
             throw new IllegalArgumentException("An HR question needs expected keywords");
@@ -26,15 +24,23 @@ public class HRQuestion extends Question implements KeywordBased {
     }
 
     @Override
-    public List<String> getKeywords() { return Collections.unmodifiableList(keywords); }
+    public List<String> getKeywords() {
+        return Collections.unmodifiableList(keywords);
+    }
 
-    @Override public String getType() { return "HR"; }
+    @Override
+    public String getType() {
+        return "HR";
+    }
 
-    @Override public int getMaxMarks() { return 5; }
+    @Override
+    public int getMaxMarks() {
+        return 5;
+    }
 
     @Override
     public String display() {
         return "[HR | " + getTopic() + " | " + getDifficulty() + "] " + getText()
-             + "\n  (Answer as you would in a real interview)";
+                + "\n  (Answer as you would in a real interview)";
     }
 }

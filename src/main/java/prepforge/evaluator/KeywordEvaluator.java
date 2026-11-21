@@ -5,10 +5,6 @@ import java.util.regex.Pattern;
 import prepforge.model.KeywordBased;
 import prepforge.model.Question;
 
-/**
- * Marks technical, HR and coding answers by keyword coverage:
- * marks = (keywords found / keywords expected) x maximum marks.
- */
 public class KeywordEvaluator implements Evaluator {
 
     @Override
@@ -28,10 +24,9 @@ public class KeywordEvaluator implements Evaluator {
             }
         }
         double marks = (double) found / keywords.size() * question.getMaxMarks();
-        return Math.round(marks * 100.0) / 100.0;   // two decimal places
+        return Math.round(marks * 100.0) / 100.0;
     }
 
-    /** Whole-word match, so the keyword "for" does not match inside "before". */
     private boolean containsWord(String text, String keyword) {
         Pattern p = Pattern.compile("(?<![a-z0-9])" + Pattern.quote(keyword) + "(?![a-z0-9])");
         return p.matcher(text).find();

@@ -28,16 +28,27 @@ public class MCQQuestion extends Question {
         this(0, text, topic, difficulty, options, correctIndex);
     }
 
-    public List<String> getOptions() { return Collections.unmodifiableList(options); }
-    public int getCorrectIndex() { return correctIndex; }
+    public List<String> getOptions() {
+        return Collections.unmodifiableList(options);
+    }
+
+    public int getCorrectIndex() {
+        return correctIndex;
+    }
 
     public String getCorrectLetter() {
         return String.valueOf((char) ('A' + correctIndex));
     }
 
-    @Override public String getType() { return "MCQ"; }
+    @Override
+    public String getType() {
+        return "MCQ";
+    }
 
-    @Override public int getMaxMarks() { return 1; }
+    @Override
+    public int getMaxMarks() {
+        return 1;
+    }
 
     @Override
     public String display() {
@@ -47,7 +58,6 @@ public class MCQQuestion extends Question {
         for (int i = 0; i < options.size(); i++) {
             sb.append("\n  ").append((char) ('A' + i)).append(") ").append(options.get(i));
         }
-        
         return sb.toString();
     }
 }

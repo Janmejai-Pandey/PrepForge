@@ -7,11 +7,15 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import prepforge.model.Admin;
+import prepforge.model.Interview;
 import prepforge.model.Student;
 import prepforge.model.User;
+import prepforge.service.AnalyticsService;
+import prepforge.service.InterviewService;
 import prepforge.service.PlacementService;
 import prepforge.service.UserService;
 import prepforge.ui.AdminScreen;
+import prepforge.ui.InterviewScreen;
 import prepforge.ui.LoginScreen;
 import prepforge.ui.StudentScreen;
 
@@ -21,12 +25,16 @@ public class Main extends Application {
     private User currentUser;
     private UserService userService;
     private PlacementService placementService;
+    private InterviewService interviewService;
+    private AnalyticsService analyticsService;
 
     @Override
     public void init() throws Exception {
         super.init();
         this.userService = new UserService();
         this.placementService = new PlacementService();
+        this.interviewService = new InterviewService();
+        this.analyticsService = new AnalyticsService();
     }
 
     @Override
@@ -50,7 +58,7 @@ public class Main extends Application {
 
     public void showStudentScreen(Student student) {
         this.currentUser = student;
-        StudentScreen studentScreen = new StudentScreen(this, student, userService, placementService);
+        StudentScreen studentScreen = new StudentScreen(this, student, userService, placementService, interviewService, analyticsService);
         Scene scene = new Scene(studentScreen.createView(), 1100, 750);
         primaryStage.setScene(scene);
         primaryStage.centerOnScreen();
@@ -58,8 +66,15 @@ public class Main extends Application {
 
     public void showAdminScreen(Admin admin) {
         this.currentUser = admin;
-        AdminScreen adminScreen = new AdminScreen(this, admin, userService, placementService);
+        AdminScreen adminScreen = new AdminScreen(this, admin, userService, placementService, interviewService, analyticsService);
         Scene scene = new Scene(adminScreen.createView(), 1100, 750);
+        primaryStage.setScene(scene);
+        primaryStage.centerOnScreen();
+    }
+
+    public void showInterviewScreen(Interview interview, Student student) {
+        InterviewScreen interviewScreen = new InterviewScreen(this, student, interview, interviewService);
+        Scene scene = new Scene(interviewScreen.createView(), 1100, 750);
         primaryStage.setScene(scene);
         primaryStage.centerOnScreen();
     }
@@ -97,6 +112,14 @@ public class Main extends Application {
 
     public PlacementService getPlacementService() {
         return placementService;
+    }
+
+    public InterviewService getInterviewService() {
+        return interviewService;
+    }
+
+    public AnalyticsService getAnalyticsService() {
+        return analyticsService;
     }
 
     public static void main(String[] args) {
