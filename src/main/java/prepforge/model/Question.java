@@ -1,6 +1,8 @@
 package prepforge.model;
 
-public abstract class Question {
+public abstract class Question implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String EASY = "EASY";
     public static final String MEDIUM = "MEDIUM";

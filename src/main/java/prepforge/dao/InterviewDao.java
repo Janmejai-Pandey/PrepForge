@@ -19,4 +19,6 @@ public interface InterviewDao {
     List<String> findRecommendations(int studentId) throws DataAccessException;
 
     Map<String, Integer> getPlatformStats() throws DataAccessException;
+
+    Interview findInterviewById(int interviewId) throws DataAccessException;
 }

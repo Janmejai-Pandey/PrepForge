@@ -30,6 +30,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import prepforge.Main;
 import prepforge.model.Admin;
+import prepforge.model.ApplicationRecord;
 import prepforge.model.CodingQuestion;
 import prepforge.model.Company;
 import prepforge.model.HRQuestion;
@@ -54,6 +55,7 @@ public class AdminScreen {
     private final AnalyticsService analyticsService;
 
     private TableView<Student> studentsTable;
+    private TableView<ApplicationRecord> applicationsTable;
     private TableView<Question> questionsTable;
     private TableView<CompanyRoleRow> postingsTable;
     private Label statStudents;
@@ -112,14 +114,16 @@ public class AdminScreen {
         Tab studentsTab = new Tab("Students Management", buildStudentsTab());
         Tab questionsTab = new Tab("Question Bank", buildQuestionBankTab());
         Tab companiesTab = new Tab("Companies & Job Roles", buildCompaniesAndRolesTab());
+        Tab applicationsTab = new Tab("Applications & Shortlisting", buildApplicationsTab());
         Tab statsTab = new Tab("Platform Statistics", buildPlatformStatisticsTab());
 
-        tabPane.getTabs().addAll(studentsTab, questionsTab, companiesTab, statsTab);
+        tabPane.getTabs().addAll(studentsTab, questionsTab, companiesTab, applicationsTab, statsTab);
         root.setCenter(tabPane);
 
         loadStudentsData();
         loadQuestionsData(null, null, null);
         loadPostingsData();
+        loadApplicationsData();
         loadPlatformStatsData();
 
         return root;
@@ -175,7 +179,11 @@ public class AdminScreen {
             new Thread(task).start();
         });
 
-        header.getChildren().addAll(title, spacer, refreshBtn, deleteBtn);
+        Button exportCsvBtn = new Button("Export Roster to CSV");
+        exportCsvBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        exportCsvBtn.setOnAction(e -> exportStudentsToCsv());
+
+        header.getChildren().addAll(title, spacer, refreshBtn, exportCsvBtn, deleteBtn);
 
         studentsTable = new TableView<>();
         studentsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -805,5 +813,184 @@ public class AdminScreen {
         public String getRoleTitle() { return roleTitle; }
         public double getMinCgpa() { return minCgpa; }
         public String getRequiredSkillsStr() { return requiredSkillsStr; }
+    }
+
+    private void exportStudentsToCsv() {
+        if (studentsTable == null || studentsTable.getItems().isEmpty()) {
+            mainApp.showAlert(Alert.AlertType.WARNING, "No Data", "No student records available to export.");
+            return;
+        }
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Export Student Roster to CSV");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files (*.csv)", "*.csv"));
+        fileChooser.setInitialFileName("PrepForge_Student_Roster.csv");
+        java.io.File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(file))) {
+                writer.println("Student ID,Full Name,Email,Enrollment No,Branch,CGPA");
+                for (Student s : studentsTable.getItems()) {
+                    writer.printf("%d,\"%s\",\"%s\",\"%s\",\"%s\",%.2f%n",
+                            s.getId(),
+                            s.getName().replace("\"", "\"\""),
+                            s.getEmail().replace("\"", "\"\""),
+                            s.getEnrollmentNumber().replace("\"", "\"\""),
+                            s.getBranch().replace("\"", "\"\""),
+                            s.getCgpa());
+                }
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Candidate roster exported to " + file.getName());
+            } catch (java.io.IOException ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Export Failed", "Failed to write CSV: " + ex.getMessage());
+            }
+        }
+    }
+
+    private Parent buildApplicationsTab() {
+        VBox container = new VBox(16);
+        container.setPadding(new Insets(24));
+        container.setStyle("-fx-background-color: white;");
+
+        HBox header = new HBox(12);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("Placement Applications & Candidate Shortlisting");
+        title.setFont(Font.font("SansSerif", FontWeight.BOLD, 18));
+        title.setTextFill(Color.web("#0f172a"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button refreshBtn = new Button("Refresh");
+        refreshBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> loadApplicationsData());
+
+        Button shortlistBtn = new Button("Shortlist");
+        shortlistBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        shortlistBtn.setOnAction(e -> updateSelectedAppStatus("SHORTLISTED"));
+
+        Button selectBtn = new Button("Mark Selected");
+        selectBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        selectBtn.setOnAction(e -> updateSelectedAppStatus("SELECTED"));
+
+        Button rejectBtn = new Button("Reject");
+        rejectBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        rejectBtn.setOnAction(e -> updateSelectedAppStatus("REJECTED"));
+
+        Button exportBtn = new Button("Export CSV");
+        exportBtn.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        exportBtn.setOnAction(e -> exportApplicationsToCsv());
+
+        header.getChildren().addAll(title, spacer, refreshBtn, shortlistBtn, selectBtn, rejectBtn, exportBtn);
+
+        applicationsTable = new TableView<>();
+        applicationsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<ApplicationRecord, String> idCol = new TableColumn<>("App ID");
+        idCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getApplicationId())));
+
+        TableColumn<ApplicationRecord, String> nameCol = new TableColumn<>("Candidate Name");
+        nameCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStudentName()));
+
+        TableColumn<ApplicationRecord, String> emailCol = new TableColumn<>("Email");
+        emailCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStudentEmail()));
+
+        TableColumn<ApplicationRecord, String> branchCol = new TableColumn<>("Branch");
+        branchCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getBranch()));
+
+        TableColumn<ApplicationRecord, String> cgpaCol = new TableColumn<>("CGPA");
+        cgpaCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.2f", d.getValue().getCgpa())));
+
+        TableColumn<ApplicationRecord, String> companyCol = new TableColumn<>("Company");
+        companyCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCompanyName()));
+
+        TableColumn<ApplicationRecord, String> roleCol = new TableColumn<>("Role Title");
+        roleCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getRoleTitle()));
+
+        TableColumn<ApplicationRecord, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStatus()));
+
+        TableColumn<ApplicationRecord, String> dateCol = new TableColumn<>("Applied Date");
+        dateCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getAppliedAt() != null ? d.getValue().getAppliedAt().toString().replace('T', ' ').substring(0, 16) : ""));
+
+        applicationsTable.getColumns().addAll(idCol, nameCol, emailCol, branchCol, cgpaCol, companyCol, roleCol, statusCol, dateCol);
+        VBox.setVgrow(applicationsTable, Priority.ALWAYS);
+
+        container.getChildren().addAll(header, applicationsTable);
+        return container;
+    }
+
+    private void loadApplicationsData() {
+        Task<List<ApplicationRecord>> task = new Task<>() {
+            @Override
+            protected List<ApplicationRecord> call() throws Exception {
+                return placementService.getAllApplications();
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (applicationsTable != null) {
+                applicationsTable.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+        });
+
+        new Thread(task).start();
+    }
+
+    private void updateSelectedAppStatus(String newStatus) {
+        ApplicationRecord selected = applicationsTable != null ? applicationsTable.getSelectionModel().getSelectedItem() : null;
+        if (selected == null) {
+            mainApp.showAlert(Alert.AlertType.WARNING, "Selection Required", "Please select an application record from the table.");
+            return;
+        }
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                placementService.updateApplicationStatus(selected.getStudentId(), selected.getRoleId(), newStatus);
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            mainApp.showAlert(Alert.AlertType.INFORMATION, "Status Updated", "Application #" + selected.getApplicationId() + " marked as " + newStatus);
+            loadApplicationsData();
+        });
+
+        task.setOnFailed(e -> {
+            mainApp.showAlert(Alert.AlertType.ERROR, "Update Failed", task.getException().getMessage());
+        });
+
+        new Thread(task).start();
+    }
+
+    private void exportApplicationsToCsv() {
+        if (applicationsTable == null || applicationsTable.getItems().isEmpty()) {
+            mainApp.showAlert(Alert.AlertType.WARNING, "No Data", "No application records available to export.");
+            return;
+        }
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Export Applications to CSV");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files (*.csv)", "*.csv"));
+        fileChooser.setInitialFileName("PrepForge_Applications.csv");
+        java.io.File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(file))) {
+                writer.println("Application ID,Candidate Name,Email,Branch,CGPA,Company,Role,Status,Applied At");
+                for (ApplicationRecord a : applicationsTable.getItems()) {
+                    writer.printf("%d,\"%s\",\"%s\",\"%s\",%.2f,\"%s\",\"%s\",\"%s\",\"%s\"%n",
+                            a.getApplicationId(),
+                            a.getStudentName().replace("\"", "\"\""),
+                            a.getStudentEmail().replace("\"", "\"\""),
+                            a.getBranch().replace("\"", "\"\""),
+                            a.getCgpa(),
+                            a.getCompanyName().replace("\"", "\"\""),
+                            a.getRoleTitle().replace("\"", "\"\""),
+                            a.getStatus(),
+                            a.getAppliedAt() != null ? a.getAppliedAt().toString() : "");
+                }
+                mainApp.showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Applications exported to " + file.getName());
+            } catch (java.io.IOException ex) {
+                mainApp.showAlert(Alert.AlertType.ERROR, "Export Failed", "Failed to write CSV: " + ex.getMessage());
+            }
+        }
     }
 }

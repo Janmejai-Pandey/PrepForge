@@ -2,7 +2,9 @@ package prepforge.model;
 
 import java.util.Objects;
 
-public class Skill {
+public class Skill implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int skillId;
     private String skillName;

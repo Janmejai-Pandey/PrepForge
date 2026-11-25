@@ -200,6 +200,7 @@ public class LoginScreen {
         TextField nameField = createStyledTextField("Full Name (e.g. Rahul Verma)");
         TextField emailField = createStyledTextField("College Email (e.g. rahul@prepforge.com)");
         PasswordField passField = createStyledPasswordField("Password (min 6 characters)");
+        PasswordField confirmPassField = createStyledPasswordField("Confirm Password");
         TextField enrollField = createStyledTextField("Enrollment Number (e.g. EN2024_08)");
 
         ComboBox<String> branchCombo = new ComboBox<>();
@@ -227,6 +228,11 @@ public class LoginScreen {
             String name = nameField.getText() != null ? nameField.getText().trim() : "";
             String email = emailField.getText() != null ? emailField.getText().trim() : "";
             String pass = passField.getText();
+            String confirmPass = confirmPassField.getText();
+            if (pass == null || pass.isEmpty() || !pass.equals(confirmPass)) {
+                mainApp.showAlert(Alert.AlertType.WARNING, "Password Mismatch", "Passwords do not match. Please verify your password.");
+                return;
+            }
             String enroll = enrollField.getText() != null ? enrollField.getText().trim() : "";
             String branch = branchCombo.getValue();
             String cgpaStr = cgpaField.getText() != null ? cgpaField.getText().trim() : "";
@@ -259,6 +265,7 @@ public class LoginScreen {
                 nameField.clear();
                 emailField.clear();
                 passField.clear();
+                confirmPassField.clear();
                 enrollField.clear();
                 cgpaField.clear();
             });
@@ -280,6 +287,7 @@ public class LoginScreen {
                 new Label("Full Name"), nameField,
                 new Label("Email Address"), emailField,
                 new Label("Password"), passField,
+                new Label("Confirm Password"), confirmPassField,
                 new Label("Enrollment Number"), enrollField,
                 new Label("Department / Branch"), branchCombo,
                 new Label("Current CGPA"), cgpaField,
@@ -303,6 +311,7 @@ public class LoginScreen {
         TextField nameField = createStyledTextField("Full Name (e.g. Dr. A. P. Sharma)");
         TextField emailField = createStyledTextField("Official Email (e.g. admin@prepforge.com)");
         PasswordField passField = createStyledPasswordField("Password (min 6 characters)");
+        PasswordField confirmPassField = createStyledPasswordField("Confirm Password");
         TextField empIdField = createStyledTextField("Employee ID (e.g. TPO_101)");
         TextField deptField = createStyledTextField("Department (e.g. Training & Placement Cell)");
 
@@ -322,6 +331,11 @@ public class LoginScreen {
             String name = nameField.getText() != null ? nameField.getText().trim() : "";
             String email = emailField.getText() != null ? emailField.getText().trim() : "";
             String pass = passField.getText();
+            String confirmPass = confirmPassField.getText();
+            if (pass == null || pass.isEmpty() || !pass.equals(confirmPass)) {
+                mainApp.showAlert(Alert.AlertType.WARNING, "Password Mismatch", "Passwords do not match. Please verify your password.");
+                return;
+            }
             String empId = empIdField.getText() != null ? empIdField.getText().trim() : "";
             String dept = deptField.getText() != null ? deptField.getText().trim() : "";
 
@@ -345,6 +359,7 @@ public class LoginScreen {
                 nameField.clear();
                 emailField.clear();
                 passField.clear();
+                confirmPassField.clear();
                 empIdField.clear();
                 deptField.clear();
             });
@@ -366,6 +381,7 @@ public class LoginScreen {
                 new Label("Full Name"), nameField,
                 new Label("Official Email"), emailField,
                 new Label("Password"), passField,
+                new Label("Confirm Password"), confirmPassField,
                 new Label("Employee ID"), empIdField,
                 new Label("Department"), deptField,
                 actionBox);

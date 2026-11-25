@@ -6,25 +6,20 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import prepforge.exception.DataAccessException;
 import prepforge.model.Interview;
 import prepforge.model.Question;
 import prepforge.model.Result;
+import prepforge.util.StorageManager;
 
 public class InMemoryInterviewDao implements InterviewDao {
 
-    private final Map<Integer, Interview> interviewStore = new ConcurrentHashMap<>();
-    private final Map<Integer, Result> resultStore = new ConcurrentHashMap<>();
-    private final Map<Integer, List<Result>> studentResults = new ConcurrentHashMap<>();
-    private final Map<Integer, Map<String, Double>> studentSkillScores = new ConcurrentHashMap<>();
-    private final Map<Integer, List<String>> studentRecommendations = new ConcurrentHashMap<>();
-
-    private final AtomicInteger nextInterviewId = new AtomicInteger(100);
-    private final AtomicInteger nextResultId = new AtomicInteger(500);
-
+    private final StorageManager.PersistentState state;
     public boolean failOnSaveResult = false;
+
+    public InMemoryInterviewDao() {
+        this.state = StorageManager.getState();
+    }
 
     @Override
     public synchronized void save(Interview interview) throws DataAccessException {
@@ -32,9 +27,10 @@ public class InMemoryInterviewDao implements InterviewDao {
             throw new DataAccessException("Cannot save null interview.");
         }
         if (interview.getId() <= 0) {
-            interview.setId(nextInterviewId.getAndIncrement());
+            interview.setId(state.nextInterviewId++);
         }
-        interviewStore.put(interview.getId(), interview);
+        state.interviewStore.put(interview.getId(), interview);
+        StorageManager.saveState();
     }
 
     @Override
@@ -42,28 +38,24 @@ public class InMemoryInterviewDao implements InterviewDao {
         if (interview == null || result == null) {
             throw new DataAccessException("Transaction aborted: Interview and Result must not be null.");
         }
-
         if (failOnSaveResult) {
             throw new DataAccessException("Simulated transactional rollback: Database error saving result.");
         }
 
         if (result.getId() <= 0) {
-            result.setId(nextResultId.getAndIncrement());
+            result.setId(state.nextResultId++);
         }
 
         interview.setStatus(Interview.COMPLETED);
-        interviewStore.put(interview.getId(), interview);
-        resultStore.put(result.getId(), result);
+        state.interviewStore.put(interview.getId(), interview);
+        state.resultStore.put(result.getId(), result);
 
         int studentId = interview.getStudentId();
-        studentResults.computeIfAbsent(studentId, k -> Collections.synchronizedList(new ArrayList<>())).add(result);
+        state.studentResults.computeIfAbsent(studentId, k -> new ArrayList<>()).add(result);
 
         Map<String, double[]> topicScores = new HashMap<>();
-        Map<Integer, String> answers = interview.getAnswers();
-
         for (Question q : interview.getQuestions()) {
             String topic = q.getTopic();
-            String ans = answers.get(q.getId());
             double marks = interview.getMarks(q.getId());
             double maxMarks = q.getMaxMarks();
 
@@ -72,7 +64,7 @@ public class InMemoryInterviewDao implements InterviewDao {
             current[1] += maxMarks;
         }
 
-        Map<String, Double> skillAverages = studentSkillScores.computeIfAbsent(studentId, k -> new ConcurrentHashMap<>());
+        Map<String, Double> skillAverages = state.studentSkillScores.computeIfAbsent(studentId, k -> new HashMap<>());
         for (Map.Entry<String, double[]> entry : topicScores.entrySet()) {
             double totalObtained = entry.getValue()[0];
             double totalMax = entry.getValue()[1];
@@ -80,18 +72,19 @@ public class InMemoryInterviewDao implements InterviewDao {
             skillAverages.put(entry.getKey(), Math.round(pct * 10.0) / 10.0);
 
             if (pct < 50.0) {
-                List<String> recs = studentRecommendations.computeIfAbsent(studentId, k -> Collections.synchronizedList(new ArrayList<>()));
+                List<String> recs = state.studentRecommendations.computeIfAbsent(studentId, k -> new ArrayList<>());
                 String msg = "Diagnostic alert: Score of " + String.format("%.1f", pct) + "% in " + entry.getKey() + " requires focused study and practice.";
                 if (!recs.contains(msg)) {
                     recs.add(msg);
                 }
             }
         }
+        StorageManager.saveState();
     }
 
     @Override
-    public List<Result> findResultsByStudent(int studentId) throws DataAccessException {
-        List<Result> res = studentResults.get(studentId);
+    public synchronized List<Result> findResultsByStudent(int studentId) throws DataAccessException {
+        List<Result> res = state.studentResults.get(studentId);
         if (res == null) {
             return Collections.emptyList();
         }
@@ -99,8 +92,8 @@ public class InMemoryInterviewDao implements InterviewDao {
     }
 
     @Override
-    public Map<String, Double> findSkillScores(int studentId) throws DataAccessException {
-        Map<String, Double> scores = studentSkillScores.get(studentId);
+    public synchronized Map<String, Double> findSkillScores(int studentId) throws DataAccessException {
+        Map<String, Double> scores = state.studentSkillScores.get(studentId);
         if (scores == null) {
             return Collections.emptyMap();
         }
@@ -108,8 +101,8 @@ public class InMemoryInterviewDao implements InterviewDao {
     }
 
     @Override
-    public List<String> findRecommendations(int studentId) throws DataAccessException {
-        List<String> recs = studentRecommendations.get(studentId);
+    public synchronized List<String> findRecommendations(int studentId) throws DataAccessException {
+        List<String> recs = state.studentRecommendations.get(studentId);
         if (recs == null) {
             return Collections.emptyList();
         }
@@ -117,11 +110,16 @@ public class InMemoryInterviewDao implements InterviewDao {
     }
 
     @Override
-    public Map<String, Integer> getPlatformStats() throws DataAccessException {
+    public synchronized Map<String, Integer> getPlatformStats() throws DataAccessException {
         Map<String, Integer> stats = new LinkedHashMap<>();
-        stats.put("totalInterviews", interviewStore.size());
-        stats.put("totalResults", resultStore.size());
-        stats.put("totalStudentsEvaluated", studentResults.size());
+        stats.put("totalInterviews", state.interviewStore.size());
+        stats.put("totalResults", state.resultStore.size());
+        stats.put("totalStudentsEvaluated", state.studentResults.size());
         return stats;
+    }
+
+    @Override
+    public synchronized Interview findInterviewById(int interviewId) throws DataAccessException {
+        return state.interviewStore.get(interviewId);
     }
 }

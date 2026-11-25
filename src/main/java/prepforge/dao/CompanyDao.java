@@ -2,6 +2,7 @@ package prepforge.dao;
 
 import java.util.List;
 import prepforge.exception.DataAccessException;
+import prepforge.model.ApplicationRecord;
 import prepforge.model.Company;
 import prepforge.model.JobRole;
 
@@ -24,4 +25,10 @@ public interface CompanyDao {
     boolean hasApplied(int studentId, int roleId) throws DataAccessException;
 
     List<Integer> findAppliedRoleIds(int studentId) throws DataAccessException;
+
+    List<ApplicationRecord> findAllApplications() throws DataAccessException;
+
+    void updateApplicationStatus(int studentId, int roleId, String status) throws DataAccessException;
+
+    void saveApplicationRecord(ApplicationRecord record) throws DataAccessException;
 }

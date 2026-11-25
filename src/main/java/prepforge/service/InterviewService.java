@@ -165,4 +165,11 @@ public class InterviewService {
     private String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
+
+    public Interview getInterviewById(int interviewId) throws PrepForgeException {
+        if (interviewId <= 0) {
+            throw new ValidationException("Invalid interview ID.");
+        }
+        return interviewDao.findInterviewById(interviewId);
+    }
 }

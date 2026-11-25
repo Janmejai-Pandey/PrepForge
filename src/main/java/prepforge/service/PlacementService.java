@@ -9,6 +9,7 @@ import prepforge.dao.InMemoryUserDao;
 import prepforge.dao.UserDao;
 import prepforge.exception.PrepForgeException;
 import prepforge.exception.ValidationException;
+import prepforge.model.ApplicationRecord;
 import prepforge.model.Company;
 import prepforge.model.JobRole;
 import prepforge.model.Skill;
@@ -118,7 +119,12 @@ public class PlacementService {
             }
         }
 
-        companyDao.saveApplication(studentId, roleId);
+        String companyName = role.getCompany() != null ? role.getCompany().getName() : "Company";
+        ApplicationRecord app = new ApplicationRecord(
+                0, studentId, student.getName(), student.getEmail(), student.getBranch(),
+                student.getCgpa(), roleId, role.getTitle(), companyName, "APPLIED"
+        );
+        companyDao.saveApplicationRecord(app);
     }
 
     public void saveCompany(Company c) throws PrepForgeException {
@@ -147,5 +153,18 @@ public class PlacementService {
 
     public List<Integer> getAppliedRoleIds(int studentId) throws PrepForgeException {
         return companyDao.findAppliedRoleIds(studentId);
+    }
+
+    public List<ApplicationRecord> getAllApplications() throws PrepForgeException {
+        return companyDao.findAllApplications();
+    }
+
+    public void updateApplicationStatus(int studentId, int roleId, String status) throws PrepForgeException {
+        Validator.validatePositiveId(studentId, "Student ID");
+        Validator.validatePositiveId(roleId, "Job Role ID");
+        if (status == null || status.trim().isEmpty()) {
+            throw new ValidationException("Status cannot be empty.");
+        }
+        companyDao.updateApplicationStatus(studentId, roleId, status.trim().toUpperCase());
     }
 }

@@ -1,25 +1,23 @@
 package prepforge.dao;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import prepforge.exception.DataAccessException;
 import prepforge.model.Admin;
 import prepforge.model.Skill;
 import prepforge.model.Student;
 import prepforge.model.User;
+import prepforge.util.StorageManager;
 
 public class InMemoryUserDao implements UserDao {
 
-    private final Map<Integer, User> userDatabase = new HashMap<>();
-    private final Map<String, User> emailIndex = new HashMap<>();
-    private final Map<Integer, Skill> skillCatalog = new HashMap<>();
-    private int nextUserId = 1;
-    private int nextSkillId = 1;
+    private final StorageManager.PersistentState state;
 
     public InMemoryUserDao() {
-        seedDefaultSkills();
+        this.state = StorageManager.getState();
+        if (state.skillCatalog.isEmpty()) {
+            seedDefaultSkills();
+        }
     }
 
     private void seedDefaultSkills() {
@@ -29,57 +27,60 @@ public class InMemoryUserDao implements UserDao {
         addCatalogSkill("Spring Boot", "Backend");
         addCatalogSkill("React", "Frontend");
         addCatalogSkill("Data Structures", "Core CS");
+        StorageManager.saveState();
     }
 
     private void addCatalogSkill(String name, String category) {
-        Skill skill = new Skill(nextSkillId, name, category);
-        skillCatalog.put(nextSkillId, skill);
-        nextSkillId++;
+        Skill skill = new Skill(state.nextSkillId, name, category);
+        state.skillCatalog.put(state.nextSkillId, skill);
+        state.nextSkillId++;
     }
 
     @Override
-    public User findByEmail(String email) throws DataAccessException {
+    public synchronized User findByEmail(String email) throws DataAccessException {
         if (email == null) return null;
-        return emailIndex.get(email.trim().toLowerCase());
+        return state.emailIndex.get(email.trim().toLowerCase());
     }
 
     @Override
-    public void saveStudent(Student student, String passwordHash) throws DataAccessException {
+    public synchronized void saveStudent(Student student, String passwordHash) throws DataAccessException {
         if (student == null) {
             throw new DataAccessException("Cannot save null student.");
         }
-        if (emailIndex.containsKey(student.getEmail().toLowerCase())) {
+        if (state.emailIndex.containsKey(student.getEmail().toLowerCase())) {
             throw new DataAccessException("User with email '" + student.getEmail() + "' already exists.");
         }
-        student.setId(nextUserId);
-        student.setUserId(nextUserId);
+        int id = state.nextUserId++;
+        student.setId(id);
+        student.setUserId(id);
         student.setPasswordHash(passwordHash);
 
-        userDatabase.put(nextUserId, student);
-        emailIndex.put(student.getEmail().toLowerCase(), student);
-        nextUserId++;
+        state.userDatabase.put(id, student);
+        state.emailIndex.put(student.getEmail().toLowerCase(), student);
+        StorageManager.saveState();
     }
 
     @Override
-    public void saveAdmin(Admin admin, String passwordHash) throws DataAccessException {
+    public synchronized void saveAdmin(Admin admin, String passwordHash) throws DataAccessException {
         if (admin == null) {
             throw new DataAccessException("Cannot save null admin.");
         }
-        if (emailIndex.containsKey(admin.getEmail().toLowerCase())) {
+        if (state.emailIndex.containsKey(admin.getEmail().toLowerCase())) {
             throw new DataAccessException("User with email '" + admin.getEmail() + "' already exists.");
         }
-        admin.setId(nextUserId);
-        admin.setUserId(nextUserId);
+        int id = state.nextUserId++;
+        admin.setId(id);
+        admin.setUserId(id);
         admin.setPasswordHash(passwordHash);
 
-        userDatabase.put(nextUserId, admin);
-        emailIndex.put(admin.getEmail().toLowerCase(), admin);
-        nextUserId++;
+        state.userDatabase.put(id, admin);
+        state.emailIndex.put(admin.getEmail().toLowerCase(), admin);
+        StorageManager.saveState();
     }
 
     @Override
-    public Student findStudentById(int studentId) throws DataAccessException {
-        User user = userDatabase.get(studentId);
+    public synchronized Student findStudentById(int studentId) throws DataAccessException {
+        User user = state.userDatabase.get(studentId);
         if (user instanceof Student) {
             return (Student) user;
         }
@@ -87,19 +88,20 @@ public class InMemoryUserDao implements UserDao {
     }
 
     @Override
-    public void updateStudent(Student student) throws DataAccessException {
+    public synchronized void updateStudent(Student student) throws DataAccessException {
         if (student == null) {
             throw new DataAccessException("Cannot update null student.");
         }
-        if (!userDatabase.containsKey(student.getId())) {
+        if (!state.userDatabase.containsKey(student.getId())) {
             throw new DataAccessException("Student with ID " + student.getId() + " not found.");
         }
-        userDatabase.put(student.getId(), student);
-        emailIndex.put(student.getEmail().toLowerCase(), student);
+        state.userDatabase.put(student.getId(), student);
+        state.emailIndex.put(student.getEmail().toLowerCase(), student);
+        StorageManager.saveState();
     }
 
     @Override
-    public void addStudentSkill(int studentId, int skillId, String level) throws DataAccessException {
+    public synchronized void addStudentSkill(int studentId, int skillId, String level) throws DataAccessException {
         Student student = findStudentById(studentId);
         if (student == null) {
             throw new DataAccessException("Student with ID " + studentId + " not found.");
@@ -109,34 +111,33 @@ public class InMemoryUserDao implements UserDao {
             throw new DataAccessException("Skill with ID " + skillId + " not found.");
         }
         student.addSkill(skill, level);
+        StorageManager.saveState();
     }
 
     @Override
-    public void removeStudentSkill(int studentId, int skillId) throws DataAccessException {
+    public synchronized void removeStudentSkill(int studentId, int skillId) throws DataAccessException {
         Student student = findStudentById(studentId);
         if (student == null) {
             throw new DataAccessException("Student with ID " + studentId + " not found.");
         }
-        Skill skill = findSkillById(skillId);
-        if (skill != null) {
-            student.getSkills().remove(skill);
-        }
+        student.removeSkill(skillId);
+        StorageManager.saveState();
     }
 
     @Override
-    public List<Skill> findAllSkills() throws DataAccessException {
-        return new ArrayList<>(skillCatalog.values());
+    public synchronized List<Skill> findAllSkills() throws DataAccessException {
+        return new ArrayList<>(state.skillCatalog.values());
     }
 
     @Override
-    public Skill findSkillById(int skillId) throws DataAccessException {
-        return skillCatalog.get(skillId);
+    public synchronized Skill findSkillById(int skillId) throws DataAccessException {
+        return state.skillCatalog.get(skillId);
     }
 
     @Override
-    public List<Student> findAllStudents() throws DataAccessException {
+    public synchronized List<Student> findAllStudents() throws DataAccessException {
         List<Student> students = new ArrayList<>();
-        for (User user : userDatabase.values()) {
+        for (User user : state.userDatabase.values()) {
             if (user instanceof Student) {
                 students.add((Student) user);
             }
@@ -145,10 +146,11 @@ public class InMemoryUserDao implements UserDao {
     }
 
     @Override
-    public void deleteStudent(int studentId) throws DataAccessException {
-        User user = userDatabase.remove(studentId);
+    public synchronized void deleteStudent(int studentId) throws DataAccessException {
+        User user = state.userDatabase.remove(studentId);
         if (user != null) {
-            emailIndex.remove(user.getEmail().toLowerCase());
+            state.emailIndex.remove(user.getEmail().toLowerCase());
+            StorageManager.saveState();
         } else {
             throw new DataAccessException("Student with ID " + studentId + " not found.");
         }

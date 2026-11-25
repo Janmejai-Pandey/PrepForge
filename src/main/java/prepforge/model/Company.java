@@ -3,7 +3,9 @@ package prepforge.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Company {
+public class Company implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int companyId;
     private String name;

@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Interview {
+public abstract class Interview implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String IN_PROGRESS = "IN_PROGRESS";
     public static final String COMPLETED = "COMPLETED";

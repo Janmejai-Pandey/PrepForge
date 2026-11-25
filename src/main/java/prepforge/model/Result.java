@@ -1,6 +1,8 @@
 package prepforge.model;
 
-public class Result {
+public class Result implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int id;
     private final int interviewId;

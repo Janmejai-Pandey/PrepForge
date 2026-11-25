@@ -5,7 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class JobRole {
+public class JobRole implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int roleId;
     private String title;

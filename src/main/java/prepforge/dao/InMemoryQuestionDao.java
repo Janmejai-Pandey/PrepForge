@@ -1,25 +1,24 @@
 package prepforge.dao;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import prepforge.exception.DataAccessException;
 import prepforge.model.CodingQuestion;
 import prepforge.model.HRQuestion;
 import prepforge.model.MCQQuestion;
 import prepforge.model.Question;
 import prepforge.model.TechnicalQuestion;
+import prepforge.util.StorageManager;
 
 public class InMemoryQuestionDao implements QuestionDao {
 
-    private final Map<Integer, Question> store = new ConcurrentHashMap<>();
-    private final AtomicInteger nextId = new AtomicInteger(1);
+    private final StorageManager.PersistentState state;
 
     public InMemoryQuestionDao() {
-        seedInitialQuestions();
+        this.state = StorageManager.getState();
+        if (state.questionStore.isEmpty()) {
+            seedInitialQuestions();
+        }
     }
 
     private void seedInitialQuestions() {
@@ -97,88 +96,73 @@ public class InMemoryQuestionDao implements QuestionDao {
                 List.of("select", "max", "salary", "where")
         ));
 
-        saveQuestionInternal(new CodingQuestion(
-                "Implement an LRU Cache data structure.",
-                "Data Structures", "HARD",
-                "Support get and put in O(1) time complexity using HashMap and Doubly Linked List.",
-                List.of("hashmap", "head", "tail", "node")
+        saveQuestionInternal(new HRQuestion(
+                "Tell me about a time you handled a difficult conflict in a team project.",
+                "HR", "EASY",
+                List.of("communication", "compromise", "resolution", "listen")
         ));
 
         saveQuestionInternal(new HRQuestion(
-                "Tell me about a challenging technical conflict in a team project and how you resolved it.",
-                "Soft Skills", "EASY",
-                List.of("team", "listen", "compromise", "result")
+                "Why do you want to join our company and what are your long-term career goals?",
+                "HR", "MEDIUM",
+                List.of("growth", "values", "contribute", "learning")
         ));
-
-        saveQuestionInternal(new HRQuestion(
-                "Where do you see yourself professionally in five years?",
-                "Soft Skills", "EASY",
-                List.of("growth", "leadership", "skills", "contribute")
-        ));
-
-        saveQuestionInternal(new HRQuestion(
-                "Describe a project deadline that changed unexpectedly and how you adapted to it.",
-                "Soft Skills", "MEDIUM",
-                List.of("prioritize", "communicate", "plan", "deliver")
-        ));
+        StorageManager.saveState();
     }
 
     private void saveQuestionInternal(Question q) {
-        int id = nextId.getAndIncrement();
+        int id = state.nextQuestionId++;
         q.setId(id);
-        store.put(id, q);
+        state.questionStore.put(id, q);
     }
 
     @Override
-    public void save(Question q) throws DataAccessException {
+    public synchronized void save(Question q) throws DataAccessException {
         if (q == null) {
             throw new DataAccessException("Cannot save null question.");
         }
         if (q.getId() <= 0) {
-            q.setId(nextId.getAndIncrement());
+            q.setId(state.nextQuestionId++);
         }
-        store.put(q.getId(), q);
+        state.questionStore.put(q.getId(), q);
+        StorageManager.saveState();
     }
 
     @Override
-    public Question findById(int id) throws DataAccessException {
-        return store.get(id);
+    public synchronized Question findById(int id) throws DataAccessException {
+        return state.questionStore.get(id);
     }
 
     @Override
-    public List<Question> findAll() throws DataAccessException {
-        return new ArrayList<>(store.values());
+    public synchronized List<Question> findAll() throws DataAccessException {
+        return new ArrayList<>(state.questionStore.values());
     }
 
     @Override
-    public void update(Question q) throws DataAccessException {
-        if (q == null) {
-            throw new DataAccessException("Cannot update null question.");
+    public synchronized void update(Question q) throws DataAccessException {
+        if (q == null || !state.questionStore.containsKey(q.getId())) {
+            throw new DataAccessException("Question not found for update: " + (q != null ? q.getId() : "null"));
         }
-        if (!store.containsKey(q.getId())) {
-            throw new DataAccessException("Question not found with ID: " + q.getId());
-        }
-        store.put(q.getId(), q);
+        state.questionStore.put(q.getId(), q);
+        StorageManager.saveState();
     }
 
     @Override
-    public void delete(int id) throws DataAccessException {
-        if (store.remove(id) == null) {
-            throw new DataAccessException("Question not found with ID: " + id);
+    public synchronized void delete(int id) throws DataAccessException {
+        if (state.questionStore.remove(id) == null) {
+            throw new DataAccessException("Question with ID " + id + " does not exist.");
         }
+        StorageManager.saveState();
     }
 
     @Override
-    public List<Question> search(String topic, String difficulty, String type) throws DataAccessException {
+    public synchronized List<Question> search(String topic, String difficulty, String type) throws DataAccessException {
         List<Question> result = new ArrayList<>();
-        for (Question q : store.values()) {
-            boolean matchesTopic = (topic == null || topic.isBlank() || q.getTopic().equalsIgnoreCase(topic.trim()));
-            boolean matchesDifficulty = (difficulty == null || difficulty.isBlank() || q.getDifficulty().equalsIgnoreCase(difficulty.trim()));
-            boolean matchesType = (type == null || type.isBlank() || q.getType().equalsIgnoreCase(type.trim()));
-
-            if (matchesTopic && matchesDifficulty && matchesType) {
-                result.add(q);
-            }
+        for (Question q : state.questionStore.values()) {
+            if (topic != null && !q.getTopic().equalsIgnoreCase(topic)) continue;
+            if (difficulty != null && !q.getDifficulty().equalsIgnoreCase(difficulty)) continue;
+            if (type != null && !q.getType().equalsIgnoreCase(type)) continue;
+            result.add(q);
         }
         return result;
     }

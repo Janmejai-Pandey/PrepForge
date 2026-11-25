@@ -31,10 +31,15 @@ public class Main extends Application {
     @Override
     public void init() throws Exception {
         super.init();
-        this.userService = new UserService();
-        this.placementService = new PlacementService();
-        this.interviewService = new InterviewService();
-        this.analyticsService = new AnalyticsService();
+        prepforge.dao.InMemoryUserDao userDao = new prepforge.dao.InMemoryUserDao();
+        prepforge.dao.InMemoryCompanyDao companyDao = new prepforge.dao.InMemoryCompanyDao();
+        prepforge.dao.InMemoryQuestionDao questionDao = new prepforge.dao.InMemoryQuestionDao();
+        prepforge.dao.InMemoryInterviewDao interviewDao = new prepforge.dao.InMemoryInterviewDao();
+
+        this.userService = new UserService(userDao);
+        this.placementService = new PlacementService(companyDao, userDao);
+        this.interviewService = new InterviewService(questionDao, interviewDao);
+        this.analyticsService = new AnalyticsService(interviewDao);
     }
 
     @Override

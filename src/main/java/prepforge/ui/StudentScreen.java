@@ -1,5 +1,15 @@
 package prepforge.ui;
 
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.ScrollPane;
+import prepforge.model.MCQQuestion;
+import prepforge.model.KeywordBased;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +67,7 @@ public class StudentScreen {
     private ListView<String> weakSkillsListView;
     private ListView<String> recommendationsListView;
     private Label cgpaBadge;
+    private BarChart<String, Number> skillBarChart;
 
     public StudentScreen(Main mainApp, Student student, UserService userService, PlacementService placementService,
                          InterviewService interviewService, AnalyticsService analyticsService) {
@@ -422,7 +433,14 @@ public class StudentScreen {
         historyTable.getColumns().addAll(resIdCol, intIdCol, scoreCol, maxCol, pctCol, gradeCol);
         VBox.setVgrow(historyTable, Priority.ALWAYS);
 
-        container.getChildren().addAll(header, historyTable);
+        Button reviewBtn = new Button("View Detailed Test Review");
+        reviewBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 8 18;");
+        reviewBtn.setOnAction(e -> showDetailedReviewDialog());
+
+        HBox actionsBar = new HBox(12, reviewBtn);
+        actionsBar.setAlignment(Pos.CENTER_LEFT);
+
+        container.getChildren().addAll(header, historyTable, actionsBar);
         return container;
     }
 
@@ -486,7 +504,17 @@ public class StudentScreen {
         recommendationsListView = new ListView<>();
         VBox.setVgrow(recommendationsListView, Priority.ALWAYS);
 
-        recsBox.getChildren().addAll(weakTitle, weakSkillsListView, recTitle, recommendationsListView);
+        CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Skill / Topic");
+        NumberAxis yAxis = new NumberAxis(0, 100, 20);
+        yAxis.setLabel("Proficiency (%)");
+
+        skillBarChart = new BarChart<>(xAxis, yAxis);
+        skillBarChart.setTitle("Visual Skill Proficiency Comparison");
+        skillBarChart.setLegendVisible(false);
+        skillBarChart.setPrefHeight(240);
+
+        recsBox.getChildren().addAll(skillBarChart, weakTitle, weakSkillsListView, recTitle, recommendationsListView);
         contentBox.getChildren().addAll(scoresBox, recsBox);
 
         container.getChildren().addAll(header, contentBox);
@@ -695,6 +723,15 @@ public class StudentScreen {
             if (recommendationsListView != null) {
                 recommendationsListView.setItems(FXCollections.observableArrayList(data.recommendations.isEmpty() ? List.of("Keep up the great work! Ready for placement drives.") : data.recommendations));
             }
+            if (skillBarChart != null) {
+                skillBarChart.getData().clear();
+                XYChart.Series<String, Number> series = new XYChart.Series<>();
+                series.setName("Proficiency");
+                for (Map.Entry<String, Double> entry : data.skillScores.entrySet()) {
+                    series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+                }
+                skillBarChart.getData().add(series);
+            }
         });
 
         new Thread(task).start();
@@ -796,5 +833,112 @@ public class StudentScreen {
 
         public String getSkill() { return skill; }
         public double getScore() { return score; }
+    }
+
+    private void showDetailedReviewDialog() {
+        ResultRow selected = historyTable != null ? historyTable.getSelectionModel().getSelectedItem() : null;
+        if (selected == null) {
+            mainApp.showAlert(Alert.AlertType.WARNING, "Selection Required", "Please select a completed test from the history table to view its detailed review.");
+            return;
+        }
+
+        Interview interview;
+        try {
+            interview = interviewService.getInterviewById(selected.getInterviewId());
+        } catch (PrepForgeException ex) {
+            mainApp.showAlert(Alert.AlertType.ERROR, "Review Unavailable", ex.getMessage());
+            return;
+        }
+        if (interview == null) {
+            mainApp.showAlert(Alert.AlertType.ERROR, "Review Unavailable", "Test data for Interview #" + selected.getInterviewId() + " could not be loaded.");
+            return;
+        }
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Detailed Assessment Review - Interview #" + interview.getId());
+        dialog.setHeaderText(String.format("Score: %.1f / %.1f (%.1f%%)  |  Grade: %s  |  Difficulty: %s",
+                selected.getTotalScore(), selected.getMaxScore(), selected.getPercentage(), selected.getGrade(), interview.getDifficulty()));
+
+        DialogPane pane = dialog.getDialogPane();
+        pane.getButtonTypes().add(ButtonType.CLOSE);
+
+        VBox reviewList = new VBox(14);
+        reviewList.setPadding(new Insets(16));
+        reviewList.setPrefWidth(680);
+
+        List<prepforge.model.Question> questions = interview.getQuestions();
+        for (int i = 0; i < questions.size(); i++) {
+            prepforge.model.Question q = questions.get(i);
+            String candidateAns = interview.getAnswer(q.getId());
+            double marksAwarded = interview.getMarks(q.getId());
+
+            VBox card = new VBox(8);
+            card.setPadding(new Insets(14));
+            card.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 8; -fx-background-radius: 8;");
+
+            HBox cardHeader = new HBox(12);
+            cardHeader.setAlignment(Pos.CENTER_LEFT);
+
+            Label qNum = new Label("Q" + (i + 1) + " (" + q.getType() + " • " + q.getTopic() + ")");
+            qNum.setFont(Font.font("SansSerif", FontWeight.BOLD, 13));
+            qNum.setTextFill(Color.web("#1e40af"));
+
+            Region cardSpacer = new Region();
+            HBox.setHgrow(cardSpacer, Priority.ALWAYS);
+
+            Label marksBadge = new Label(String.format("%.1f / %.1f Marks", marksAwarded, (double) q.getMaxMarks()));
+            if (marksAwarded >= q.getMaxMarks()) {
+                marksBadge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-padding: 3 8; -fx-background-radius: 4; -fx-font-weight: bold; -fx-font-size: 11px;");
+            } else if (marksAwarded > 0) {
+                marksBadge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #b45309; -fx-padding: 3 8; -fx-background-radius: 4; -fx-font-weight: bold; -fx-font-size: 11px;");
+            } else {
+                marksBadge.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-padding: 3 8; -fx-background-radius: 4; -fx-font-weight: bold; -fx-font-size: 11px;");
+            }
+
+            cardHeader.getChildren().addAll(qNum, cardSpacer, marksBadge);
+
+            Label qText = new Label(q.getText());
+            qText.setFont(Font.font("SansSerif", FontWeight.SEMI_BOLD, 13));
+            qText.setWrapText(true);
+
+            VBox yourAnsBox = new VBox(4);
+            Label yourAnsTitle = new Label("Your Submitted Answer:");
+            yourAnsTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 11));
+            yourAnsTitle.setTextFill(Color.web("#475569"));
+            Label yourAnsContent = new Label(candidateAns != null && !candidateAns.isBlank() ? candidateAns : "(No answer submitted)");
+            yourAnsContent.setWrapText(true);
+            yourAnsContent.setStyle("-fx-background-color: #f8fafc; -fx-padding: 6 10; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
+            yourAnsBox.getChildren().addAll(yourAnsTitle, yourAnsContent);
+
+            VBox correctAnsBox = new VBox(4);
+            Label correctAnsTitle = new Label("Correct / Expected Answer:");
+            correctAnsTitle.setFont(Font.font("SansSerif", FontWeight.BOLD, 11));
+            correctAnsTitle.setTextFill(Color.web("#065f46"));
+
+            Label correctAnsContent = new Label();
+            correctAnsContent.setWrapText(true);
+            correctAnsContent.setStyle("-fx-background-color: #ecfdf5; -fx-text-fill: #065f46; -fx-padding: 6 10; -fx-border-color: #a7f3d0; -fx-border-radius: 4; -fx-font-weight: bold;");
+
+            if (q instanceof MCQQuestion) {
+                MCQQuestion mcq = (MCQQuestion) q;
+                String correctText = mcq.getOptions().get(mcq.getCorrectIndex());
+                correctAnsContent.setText(mcq.getCorrectLetter() + ") " + correctText);
+            } else if (q instanceof KeywordBased) {
+                List<String> kw = ((KeywordBased) q).getKeywords();
+                correctAnsContent.setText("Key concepts & solution keywords expected: " + String.join(", ", kw));
+            } else {
+                correctAnsContent.setText("Standard solution evaluation applied.");
+            }
+            correctAnsBox.getChildren().addAll(correctAnsTitle, correctAnsContent);
+
+            card.getChildren().addAll(cardHeader, qText, yourAnsBox, correctAnsBox);
+            reviewList.getChildren().add(card);
+        }
+
+        ScrollPane scrollPane = new ScrollPane(reviewList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(480);
+        pane.setContent(scrollPane);
+        dialog.showAndWait();
     }
 }
