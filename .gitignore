@@ -12,3 +12,4 @@ db.properties
 .classpath
 Thumbs.db
 .DS_Store
+prepforge_state.dat

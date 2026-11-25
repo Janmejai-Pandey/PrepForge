@@ -27,14 +27,14 @@ Presentation Layer (JavaFX UI) -> Service / Business Layer -> Data Access Layer 
    - Passwords are never stored in plaintext.
    - Cryptographic hashing implemented using `PBKDF2WithHmacSHA256` with 10,000 iterations and 16-byte cryptographically secure random salts.
 
-## 2. Work Distribution & Contracts
+## 2. Team Work Distribution
 
-| Contract | Owner / Role | Primary Responsibilities | Status |
+| Module | Owner / Role | Primary Responsibilities | Status |
 |---|---|---|---|
-| Member 1 | OOP & User Management | `User`, `Student`, `Admin`, `Skill`, `Company`, `JobRole`, `UserService`, `PlacementService`, `Validator`, `PasswordHasher`, and Exception hierarchy | Complete |
-| Member 2 | Database & DAOs | Relational schema (`schema.sql`), views, stored procedure, function, triggers (`advanced.sql`), ER diagram (`er-diagram.png`), `DBConnection`, `UserDao`, `CompanyDao`, `QuestionDao`, `InterviewDao`, `InMemoryQuestionDao`, `InMemoryInterviewDao` | Complete |
+| Member 1 | OOP & User Management | `User`, `Student`, `Admin`, `Skill`, `Company`, `JobRole`, `ApplicationRecord`, `UserService`, `PlacementService`, `Validator`, `PasswordHasher`, and Exception hierarchy | Complete |
+| Member 2 | Database & DAOs | Relational schema (`schema.sql`), views, stored procedure, function, triggers (`advanced.sql`), ER diagram (`er-diagram.png`), `DBConnection`, `StorageManager`, `DataSeeder`, `UserDao`, `CompanyDao`, `QuestionDao`, `InterviewDao`, and In-Memory DAO implementations | Complete |
 | Member 3 | Interviews & Analytics | `Interview`, `TechnicalInterview`, `HRInterview`, `MockInterview`, `Question`, `MCQQuestion`, `TechnicalQuestion`, `CodingQuestion`, `HRQuestion`, `Result`, `Evaluator`, `MCQEvaluator`, `KeywordEvaluator`, `InterviewService`, `AnalyticsService` | Complete |
-| Member 4 | UI & Integration | Maven build (`pom.xml`, `.gitignore`), JavaFX desktop application (`Main`, `LoginScreen`, `StudentScreen` [5 tabs], `AdminScreen` [4 tabs], `InterviewScreen`), system integration | Complete |
+| Member 4 | UI & Integration | Maven build (`pom.xml`, `.gitignore`), JavaFX desktop application (`Main`, `LoginScreen`, `StudentScreen` [5 tabs], `AdminScreen` [5 tabs], `InterviewScreen`), system integration | Complete |
 
 ## 3. Database Normalization (1NF, 2NF, 3NF)
 
@@ -52,7 +52,20 @@ The database schema is normalized to Third Normal Form (3NF) to eliminate data r
    - The relations meet 2NF criteria and contain no transitive dependencies.
    - Corporate details reside in `companies` and are referenced by `job_roles` via foreign key `company_id`. Student applications reference `role_id` and `student_id` without duplicating entity attributes.
 
-## 4. Build & Execution Instructions
+## 4. Data Sources & External Dataset Attribution
+
+PrepForge does not hardcode question banks or corporate/student datasets inside Java source files. Instead, `DataSeeder` loads external CSV datasets from `src/main/resources/data/` (`questions.csv`, `skills.csv`, `companies.csv`, `job_roles.csv`, `users.csv`, `applications.csv`) on initial startup and persists changes locally via `StorageManager` (`prepforge_state.dat`).
+
+The 240 assessment questions in `src/main/resources/data/questions.csv` are collected from the following verified open-source datasets and public APIs:
+
+| Question Category | Count | Source Name | Source Link | License |
+|---|---|---|---|---|
+| `MCQ` (Computer Science) | 45 | Open Trivia Database (OpenTDB) — Science: Computers (Category 18) | [OpenTDB](https://opentdb.com/) / [API Endpoint](https://opentdb.com/api.php?amount=15&category=18&type=multiple) | CC BY-SA 4.0 |
+| `TECHNICAL` (Web, JS, React, Node, HTML, CSS) | 103 | 30 Seconds of Interviews (`30-seconds/30-seconds-of-interviews`) | [GitHub Repo](https://github.com/30-seconds/30-seconds-of-interviews) / [Raw JSON](https://raw.githubusercontent.com/30-seconds/30-seconds-of-interviews/master/data/questions.json) | CC0-1.0 |
+| `CODING` (Company-Wise DSA & SQL) | 63 | LeetCode Company-Wise Problems (`liquidslr/leetcode-company-wise-problems`) | [GitHub Repo](https://github.com/liquidslr/leetcode-company-wise-problems) | Open Source |
+| `HR` (Behavioral Interview Questions) | 29 | Tech Interview Handbook (`yangshun/tech-interview-handbook`) | [GitHub Repo](https://github.com/yangshun/tech-interview-handbook) / [Behavioral Questions](https://raw.githubusercontent.com/yangshun/tech-interview-handbook/main/apps/website/contents/behavioral-interview-questions.md) | MIT License |
+
+## 5. Build & Execution Instructions
 
 ### Prerequisites
 - Java Development Kit (JDK) 17 or higher

@@ -1,0 +1,12 @@
+role_id,company_id,title,min_cgpa,required_skills
+1,1,Software Development Engineer (SDE-1),8.5,Java;Data Structures;Computer Science
+2,1,Frontend Software Engineer,8.0,JavaScript;React;HTML;CSS
+3,2,Software Engineer - Core Systems,8.0,Java;Data Structures;Computer Science
+4,2,Full Stack Web Engineer,7.5,JavaScript;React;Node.js;Database
+5,3,Backend Systems Associate,7.5,Java;Database;Data Structures
+6,3,Cloud & Security Analyst,7.5,Python;Security;Computer Science
+7,4,Product Software Engineer,8.0,JavaScript;React;Node.js
+8,5,SDE-1 Backend,7.8,Java;Data Structures;Database
+9,6,Specialist Programmer,7.0,Python;Data Structures
+10,7,Systems Engineer,6.5,Java;Communication
+11,7,Digital Specialist Engineer,7.0,Python;Database

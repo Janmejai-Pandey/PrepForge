@@ -1,0 +1,241 @@
+type,topic,difficulty,text,options,correct_index,problem_statement,keywords
+MCQ,Computer Science,EASY,The programming language 'Swift' was created to replace what other programming language?,C#||Objective-C||Ruby||C++,1,,
+MCQ,Computer Science,EASY,Which programming language shares its name with an island in Indonesia?,Python||C||Jakarta||Java,3,,
+MCQ,Computer Science,EASY,If you were to code software in this language you'd only be able to type 0's and 1's.,JavaScript||C++||Python||Binary,3,,
+MCQ,Computer Science,EASY,What is the name of Layer 7 of the OSI model?,Application||Session||Network||Present,0,,
+MCQ,Computer Science,EASY,What does SSD stand for?,Solution Source Disk||Solid State Drive||Solid State Disk||Source Solution Drive,1,,
+MCQ,Computer Science,EASY,What does the term USB stand for?,Universal Simtex Blot||Unified Signal Bus||Universal Serial Bus||Unityped Semtex Backer,2,,
+MCQ,Computer Science,EASY,What programming language was GitHub written in?,Ruby||JavaScript||Python||Lua,0,,
+MCQ,Computer Science,EASY,What does LTS stand for in the software market?,Long Taco Service||Long Term Support||Ludicrous Transfer Speed||Ludicrous Turbo Speed,1,,
+MCQ,Computer Science,EASY,"On a standard American QWERTY keyboard, what symbol will you enter if you hold the shift key and press 1?",Exclamation Mark||Dollar Sign||Percent Sign||Asterisk,0,,
+MCQ,Computer Science,EASY,What is the domain name for the country Tuvalu?,.tu||.tt||.tv||.tl,2,,
+MCQ,Computer Science,EASY,What is the code name for the mobile operating system Android 7.0?,Nougat||Ice Cream Sandwich||Jelly Bean||Marshmallow,0,,
+MCQ,Computer Science,EASY,What language does Node.js use?,JavaScript||Java||Java Source||Joomla Source Code,0,,
+MCQ,Computer Science,EASY,How many bits are commonly in a single byte?,Eight bits||Six bits||Twelve bits||Fifteen bits,0,,
+MCQ,Computer Science,EASY,What kind of memory is used on memory cache?,DRAM||ROM||SRAM||Flash,2,,
+MCQ,Computer Science,EASY,Color model CMYK stands for?,"Cream, Maroon, Yellow, and Black||Cyan, Magenta, Yellow, and Khaki||Cream, Maroon, Yellow, and Khaki||Cyan, Magenta, Yellow, and Black",3,,
+MCQ,Computer Science,MEDIUM,"While Apple was formed in California, in which western state was Microsoft founded?",Washington||Colorado||New Mexico||Arizona,2,,
+MCQ,Computer Science,MEDIUM,What does AD stand for in relation to Windows Operating Systems?,Active Directory||Alternative Drive||Automated Database||Active Department,0,,
+MCQ,Computer Science,MEDIUM,Which of these programming languages is a low-level language?,Python||C#||Assembly||Pascal,2,,
+MCQ,Computer Science,MEDIUM,What is the correct term for the metal object in between the CPU and the CPU fan within a computer system?,CPU Vent||Temperature Decipator||Heat Vent||Heat Sink,3,,
+MCQ,Computer Science,MEDIUM,"What does the term MIME stand for, in regards to computing?",Multipurpose Internet Mail Extensions||Mail Internet Mail Exchange||Multipurpose Interleave Mail Exchange||Mail Interleave Method Exchange,0,,
+MCQ,Computer Science,MEDIUM,Nvidia's headquarters are based in which Silicon Valley city?,Palo Alto||Santa Clara||Cupertino||Mountain View,1,,
+MCQ,Computer Science,MEDIUM,What was the first commerically available computer processor?,Intel 4004||Intel 486SX||TMS 1000||AMD AM386,0,,
+MCQ,Computer Science,MEDIUM,"In HTML, which non-standard tag used to be be used to make elements scroll across the viewport?",<scroll></scroll>||<move></move>||<slide></slide>||<marquee></marquee>,3,,
+MCQ,Computer Science,MEDIUM,How fast is USB 3.1 Gen 2 theoretically?,10 Gb/s||5 Gb/s||8 Gb/s||1 Gb/s,0,,
+MCQ,Computer Science,MEDIUM,How many cores does the Intel i7-6950X have?,12||8||4||10,3,,
+MCQ,Computer Science,MEDIUM,Which of the following is a personal computer made by the Japanese company Fujitsu?,FM-7||PC-9801||Xmillennium||MSX,0,,
+MCQ,Computer Science,MEDIUM,On which day did the World Wide Web go online?,"December 17, 1996||December 20, 1990||November 12, 1990||November 24, 1995",1,,
+MCQ,Computer Science,MEDIUM,What does the 'S' in the RSA encryption algorithm stand for?,Secure||Shamir||Schottky||Stable,1,,
+MCQ,Computer Science,MEDIUM,Unix Time is defined as the number of seconds that have elapsed since when?,"Midnight, July 4, 1976||Midnight on the creator of Unix's birthday||Midnight, January 1, 1970||Midnight, July 4, 1980",2,,
+MCQ,Computer Science,MEDIUM,"Originally used in PCM adapters, what frequency is the standard for sampling audio in the Compact Disc Digital Audio format?",44.1 kHz||32.0 kHz||1.5 MHz||20.5 kHz,0,,
+MCQ,Computer Science,HARD,"What was the first company to use the term ""Golden Master""?",Apple||IBM||Microsoft||Google,0,,
+MCQ,Computer Science,HARD,Which of these was the name of a bug found in April 2014 in the publicly available OpenSSL cryptography library?,Shellshock||Heartbleed||Corrupted Blood||Shellscript,1,,
+MCQ,Computer Science,HARD,"Lenovo acquired IBM's personal computer division, including the ThinkPad line of laptops and tablets, in what year?",1999||2005||2002||2008,1,,
+MCQ,Computer Science,HARD,Which of these is not a key value of Agile software development?,Individuals and interactions||Comprehensive documentation||Customer collaboration||Responding to change,1,,
+MCQ,Computer Science,HARD,Which data structure does FILO apply to?,Queue||Heap||Tree||Stack,3,,
+MCQ,Computer Science,HARD,What port does HTTP run on?,53||80||443||23,1,,
+MCQ,Computer Science,HARD,America Online (AOL) started out as which of these online service providers?,CompuServe||Prodigy||GEnie||Quantum Link,3,,
+MCQ,Computer Science,HARD,Which of the following is the oldest of these computers by release date?,Commodore 64||ZX Spectrum||Apple 3||TRS-80,3,,
+MCQ,Computer Science,HARD,"According to DeMorgan's Theorem, the Boolean expression (AB)' is equivalent to:",A'B + B'A||A'B'||AB' + AB||A' + B',3,,
+MCQ,Computer Science,HARD,Dutch computer scientist Mark Overmars is known for creating which game development engine?,Stencyl||Game Maker||Construct||Torque 2D,1,,
+MCQ,Computer Science,HARD,What major programming language does Unreal Engine 4 use?,C++||Assembly||C#||ECMAScript,0,,
+MCQ,Computer Science,HARD,What is the codename of the eighth generation Intel Core micro-architecture launched in October 2017?,Sandy Bridge||Coffee Lake||Skylake||Broadwell,1,,
+MCQ,Computer Science,HARD,Which of these is not a layer in the OSI model for data communications?,Application Layer||Connection Layer||Transport Layer||Physical Layer,1,,
+MCQ,Computer Science,HARD,What internet protocol was documented in RFC 1459?,HTTP||HTTPS||IRC||FTP,2,,
+MCQ,Computer Science,HARD,CMOS is tech used for constructing integrated circuits. What does CMOS stand for?,Complementary magnetic-ohms-semiconductor||Complementary metal–oxide–semiconductor||Computer-made operating system||Computer-made oscillating static,1,,
+TECHNICAL,Accessibility,MEDIUM,What is ARIA and when should you use it?,,,,accessible;rich;internet;applications;benefits
+TECHNICAL,Accessibility,MEDIUM,What is the Accessibility Tree?,,,,tree;structure;exposing;information;assistive
+TECHNICAL,HTML,EASY,What is the purpose of the alt attribute on images?,,,,decorative;images;empty;attribute;crawlers
+TECHNICAL,HTML,MEDIUM,What are defer and async attributes on a <script> tag?,,,,placing;defer;script;head;allows
+TECHNICAL,JavaScript,MEDIUM,Create a function batches that returns the maximum number of whole batches that can be cooked from a recipe.,,,,must;ingredients;recipe;available;quantities
+TECHNICAL,CSS,EASY,What is CSS BEM?,,,,alternative;solutions;scope;issues
+TECHNICAL,JavaScript,HARD,What is Big O Notation?,,,,wary;nesting;loops;execution;time
+TECHNICAL,JavaScript,MEDIUM,Create a standalone function bind that is functionally equivalent to the method Function.prototype.bind.,,,,return;function;accepts;arbitrary;number
+TECHNICAL,HTML,EASY,What is the purpose of cache busting and how can you achieve it?,,,,browsers;cache;temporarily;store;files
+TECHNICAL,Node.js,HARD,How can you avoid callback hells?,,,,efficient;javascript;developer;avoid;constantly
+TECHNICAL,React,MEDIUM,What is the purpose of callback function as an argument of setState?,,,,callback;function;invoked;after;setstate
+TECHNICAL,React,HARD,Which is the preferred option between callback refs and findDOMNode()?,,,,callback;refs;preferred;over;finddomnode
+TECHNICAL,JavaScript,MEDIUM,What is a callback? Can you show an example using one?,,,,functions;first;class;objects;javascript
+TECHNICAL,React,HARD,What is the children prop?,,,,children;prop;allows;components;passed
+TECHNICAL,React,MEDIUM,Why does React use className instead of class like in HTML?,,,,react;philosophy;beginning;align;browser
+TECHNICAL,JavaScript,MEDIUM,How do you clone an object in JavaScript?,,,,javascript;passes;objects;reference;meaning
+TECHNICAL,JavaScript,HARD,What is a closure? Can you give a useful example of one?,,,,closures;useful;because;associate;data
+TECHNICAL,JavaScript,MEDIUM,How do you compare two objects in JavaScript?,,,,primitives;strings;numbers;compared;value
+TECHNICAL,React,HARD,What is context?,,,,context;provides;pass;data;through
+TECHNICAL,JavaScript,MEDIUM,What is CORS?,,,,cors;behavior;error;security;mechanism
+TECHNICAL,CSS,MEDIUM,Describe the layout of the CSS Box Model and briefly describe each component.,,,,very;common;question;asked;during
+TECHNICAL,CSS,EASY,What are the advantages of using CSS preprocessors?,,,,allow;write;maintainable;scalable;some
+TECHNICAL,CSS,HARD,What is the difference between '+' and '~' sibling selectors?.,,,,general;sibling;selector;selects;elements
+TECHNICAL,CSS,HARD,Can you describe how CSS specificity works?,,,,specificity;matrix;inline;class;pseudo
+TECHNICAL,HTML,MEDIUM,What is the DOM?,,,,designed;independent;particular;programming;language
+TECHNICAL,JavaScript,EASY,What is the difference between the equality operators == and ===?,,,,whenever;possible;triple;equals;test
+TECHNICAL,React,EASY,What is the difference between an element and a component in React?,,,,elements;immutable;plain;objects;describe
+TECHNICAL,CSS,MEDIUM,What is the difference between em and rem units?,,,,benefits;units;both;based;property
+TECHNICAL,React,HARD,What are error boundaries in React?,,,,error;boundaries;catch;errors;components
+TECHNICAL,JavaScript,MEDIUM,What is event delegation and why is it useful? Can you show an example of how to use it?,,,,difference;event;bubbling;capturing
+TECHNICAL,JavaScript,HARD,What is event-driven programming?,,,,follows;publish;subscribe;pattern;responds
+TECHNICAL,JavaScript,MEDIUM,What is the difference between an expression and a statement in JavaScript?,,,,function;declarations;expressions
+TECHNICAL,JavaScript,MEDIUM,What are truthy and falsy values in JavaScript?,,,,value;either;truthy;falsy;depending
+TECHNICAL,JavaScript,MEDIUM,"Generate an array, containing the Fibonacci sequence, up until the nth term.",,,,initialize;empty;array;length;values
+TECHNICAL,CSS,EASY,"Using flexbox, create a 3-column layout where each column takes up a col-{n} / 12 ratio of the container.",,,,parent;shorthand;property;give;column
+TECHNICAL,JavaScript,MEDIUM,What does 0.1 + 0.2 === 0.3 evaluate to?,,,,simple;solution;problem
+TECHNICAL,CSS,HARD,What is a focus ring? What is the correct solution to handle them?,,,,focus;ring;visible;outline;given
+TECHNICAL,JavaScript,MEDIUM,What is the difference between the array methods map() and forEach()?,,,,foreach;need;iterate;over;array
+TECHNICAL,React,HARD,What are fragments?,,,,fragments;group;multiple;elements;returned
+TECHNICAL,JavaScript,HARD,What is functional programming?,,,,cleaner;concise;development;experience;simple
+TECHNICAL,React,HARD,What are higher-order components?,,,,state;abstraction;manipulation;props;render
+TECHNICAL,JavaScript,MEDIUM,What will the console log in this example?,,,,hoisting;javascript;default;behavior;moving
+TECHNICAL,JavaScript,MEDIUM,How does hoisting work in JavaScript?,,,,hoisting;javascript;default;behavior;moving
+TECHNICAL,HTML,EASY,Can a web page contain multiple <header> elements? What about <footer> elements?,,,,recommends;having;many;want;each
+TECHNICAL,HTML,MEDIUM,Discuss the differences between an HTML specification and a browser’s implementation thereof.,,,,html;defines;some;rules;follow
+TECHNICAL,React,MEDIUM,What is the difference between HTML and React event handling?,,,,html;uses;lowercase;react;camelcase
+TECHNICAL,HTML,MEDIUM,What are some differences that XHTML has compared to HTML?,,,,element;self;closed;tags;ands
+TECHNICAL,HTML,EASY,"Briefly describe the correct usage of the following HTML5 semantic elements: <header>, <article>,<section>, <footer>",,,,semantic;elements;form;table
+TECHNICAL,HTML,HARD,What is HTML5 Web Storage? Explain localStorage and sessionStorage.,,,,earlier;done;cookies;storage;limit
+TECHNICAL,JavaScript,MEDIUM,What is the reason for wrapping the entire contents of a JavaScript source file in a function that is immediately invoked?,,,,among;many;popular;javascript;libraries
+TECHNICAL,JavaScript,HARD,Explain the differences between imperative and declarative programming.,,,,declarative;programming;often;works;functions
+TECHNICAL,React,MEDIUM,What are inline conditional expressions?,,,,since;element;tree;large;expression
+TECHNICAL,React,MEDIUM,What is a key? What are the benefits of using it in lists?,,,,keys;give;elements;collection;stable
+TECHNICAL,Accessibility,MEDIUM,What are landmark roles and how can they be useful?,,,,identify;sections;page;assist;users
+TECHNICAL,JavaScript,MEDIUM,What is the difference between lexical scoping and dynamic scoping?,,,,lexical;scoping;known;static;javascript
+TECHNICAL,React,MEDIUM,What are the lifecycle methods in React?,,,,executed;before;rendering;initial;mount
+TECHNICAL,React,MEDIUM,What are the different phases of the component lifecycle in React?,,,,four;different;phases;component;lifecycle
+TECHNICAL,React,EASY,What does lifting state up in React mean?,,,,several;components;need;share;same
+TECHNICAL,JavaScript,MEDIUM,Create a function that masks a string of characters with # except for the last four (4) characters.,,,,short;line;functional;solutions;problems
+TECHNICAL,CSS,EASY,Can you name the four types of @media properties?,,,,applies;media;type;devices;printers
+TECHNICAL,JavaScript,HARD,What is memoization?,,,,above;technique;returns;unary;function
+TECHNICAL,React,HARD,How do you ensure methods have the correct this context in React component classes?,,,,either;bind;methods;component;instance
+TECHNICAL,JavaScript,MEDIUM,What is a MIME type and what is it used for?,,,,mime;type;actually;parts;subtype
+TECHNICAL,JavaScript,HARD,"Contrast mutable and immutable values, and mutating vs non-mutating methods.",,,,list;mutating;array;methods
+TECHNICAL,JavaScript,HARD,What is the only value not equal to itself in JavaScript?,,,,difference;isnan;number;const
+TECHNICAL,Node.js,MEDIUM,"NodeJS often uses a callback pattern where if an error is encountered during execution, this error is passed as the first argument to the callback. What are the advantages of this pattern?",,,,just;convention;however;stick
+TECHNICAL,Node.js,HARD,What is the event loop in Node.js?,,,,event;loop;allows;node;perform
+TECHNICAL,JavaScript,MEDIUM,What is the difference between null and undefined?,,,,typeof;undefined;evaluates;null;object
+TECHNICAL,JavaScript,MEDIUM,Describe the different ways to create an object. When should certain ways be preferred over others?,,,,prototypes;objects;inherit;properties;methods
+TECHNICAL,JavaScript,MEDIUM,What is the difference between a parameter and an argument?,,,,arguments;array;object;containing;information
+TECHNICAL,JavaScript,MEDIUM,Does JavaScript pass by value or by reference?,,,,difference;pass;value;reference
+TECHNICAL,React,MEDIUM,How do you pass an argument to an event handler or callback?,,,,arrow;function;wrap;around;event
+TECHNICAL,JavaScript,HARD,Create a function pipe that performs left-to-right function composition by returning a function that accepts one argument.,,,,function;composition;process;combining;functions
+TECHNICAL,React,HARD,What are portals in React?,,,,portal;recommended;render;children;node
+TECHNICAL,JavaScript,EASY,What is the difference between the postfix i++ and prefix ++i increment operators?,,,,both;increment;variable;value;difference
+TECHNICAL,JavaScript,EASY,In which states can a Promise be?,,,,states;pending;initial;state;neither
+TECHNICAL,JavaScript,MEDIUM,What are Promises?,,,,take;look;questions;regarding;promise
+TECHNICAL,React,HARD,How to apply prop validation in React?,,,,define;custom;proptypes;mandatory;however
+TECHNICAL,JavaScript,MEDIUM,How does prototypal inheritance differ from classical inheritance?,,,,classical;inheritance;paradigm;object;instances
+TECHNICAL,JavaScript,HARD,What is a pure function?,,,,pure;functions;easier;reason;reliability
+TECHNICAL,React,EASY,How do you write comments inside a JSX tree in React?,,,,comments;must;wrapped;inside;curly
+TECHNICAL,JavaScript,HARD,What is recursion and when is it useful?,,,,recursion;useful;working;data;structures
+TECHNICAL,JavaScript,MEDIUM,What is the output of the following code?,,,,javascript;performs;automatic;type;conversion
+TECHNICAL,React,HARD,What are refs in React? When should they be used?,,,,refs;return;reference;element;shouldn
+TECHNICAL,HTML,MEDIUM,"Where and why is the rel=""noopener"" attribute used?",,,,noopener;applied;hyperlinks;prevents;opened
+TECHNICAL,Node.js,MEDIUM,What is REST?,,,,alternatives;pattern;graphql
+TECHNICAL,JavaScript,MEDIUM,What does the following function return?,,,,automatic;semicolon;placement;lead;time
+TECHNICAL,JavaScript,MEDIUM,Are semicolons required in JavaScript?,,,,semicolons;usually;optional;javascript;edge
+TECHNICAL,JavaScript,MEDIUM,What is short-circuit evaluation in JavaScript?,,,,logical;operations;produce;boolean;unless
+TECHNICAL,CSS,MEDIUM,What are the advantages of using CSS sprites and how are they utilized?,,,,background;image;position;size;utilize
+TECHNICAL,React,EASY,What is a stateful component in React?,,,,stateful;components;internal;state;depend
+TECHNICAL,React,EASY,What is a stateless component?,,,,stateless;components;independent;state;either
+TECHNICAL,JavaScript,HARD,Explain the difference between a static method and an instance method.,,,,create;static;instance;methods;class
+TECHNICAL,JavaScript,MEDIUM,What is the difference between synchronous and asynchronous code in JavaScript?,,,,javascript;concurrency;model;based;event
+TECHNICAL,JavaScript,HARD,What is the this keyword and how does it work?,,,,strict;mode;global;object;window
+TECHNICAL,JavaScript,MEDIUM,What does the following code evaluate to?,,,,evaluates;string;therefore
+TECHNICAL,JavaScript,MEDIUM,What are JavaScript data types?,,,,mention;newly;added;symbol;data
+TECHNICAL,JavaScript,HARD,"What is the purpose of JavaScript UI libraries/frameworks like React, Vue, Angular, Hyperapp, etc?",,,,virtual;representation;real;tree;form
+TECHNICAL,JavaScript,HARD,What does 'use strict' do and what are some of the key benefits to using it?,,,,eliminates;coercion;throwing;error;references
+TECHNICAL,JavaScript,MEDIUM,"What are the differences between var, let, const and no keyword statements?",,,,declarations;hoisted;scope;however;const
+TECHNICAL,JavaScript,HARD,What is a virtual DOM and why is it used in libraries/frameworks?,,,,accessing;costly;virtual;vdom;representation
+TECHNICAL,Accessibility,EASY,"What is WCAG? What are the differences between A, AA, and AAA compliance?",,,,guideline;making;content;accessible;different
+TECHNICAL,Security,MEDIUM,What is a cross-site scripting attack (XSS) and how do you prevent it?,,,,client;textcontent;instead;innerhtml;prevents
+CODING,Data Structures,EASY,Two Sum (Google),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,MEDIUM,Add Two Numbers (Google),,,"Solve LeetCode problem 'Add Two Numbers' (Topics: Linked List, Math, Recursion). Source: https://leetcode.com/problems/add-two-numbers",return;linked;list;math;recursion
+CODING,Data Structures,HARD,Median of Two Sorted Arrays (Google),,,"Solve LeetCode problem 'Median of Two Sorted Arrays' (Topics: Array, Binary Search, Divide and Conquer). Source: https://leetcode.com/problems/median-of-two-sorted-arrays",return;array;binary;search;divide
+CODING,Data Structures,EASY,Longest Common Prefix (Google),,,"Solve LeetCode problem 'Longest Common Prefix' (Topics: Array, String, Trie). Source: https://leetcode.com/problems/longest-common-prefix",return;array;string;trie;longest
+CODING,Data Structures,EASY,Palindrome Number (Google),,,Solve LeetCode problem 'Palindrome Number' (Topics: Math). Source: https://leetcode.com/problems/palindrome-number,return;math;palindrome;number
+CODING,Data Structures,HARD,Trapping Rain Water (Google),,,"Solve LeetCode problem 'Trapping Rain Water' (Topics: Array, Two Pointers, Dynamic Programming, Stack, Monotonic Stack). Source: https://leetcode.com/problems/trapping-rain-water",return;array;two;pointers;dynamic
+CODING,Data Structures,MEDIUM,3Sum (Google),,,"Solve LeetCode problem '3Sum' (Topics: Array, Two Pointers, Sorting). Source: https://leetcode.com/problems/3sum",return;array;two;pointers;sorting
+CODING,Data Structures,MEDIUM,Longest Substring Without Repeating Characters (Google),,,"Solve LeetCode problem 'Longest Substring Without Repeating Characters' (Topics: Hash Table, String, Sliding Window). Source: https://leetcode.com/problems/longest-substring-without-repeating-characters",return;hash;table;string;sliding
+CODING,Data Structures,HARD,N-Queens (Google),,,"Solve LeetCode problem 'N-Queens' (Topics: Array, Backtracking, Algorithm X). Source: https://leetcode.com/problems/n-queens",return;array;backtracking;algorithm;queens
+CODING,Data Structures,EASY,Two Sum (Microsoft),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,MEDIUM,Add Two Numbers (Microsoft),,,"Solve LeetCode problem 'Add Two Numbers' (Topics: Linked List, Math, Recursion). Source: https://leetcode.com/problems/add-two-numbers",return;linked;list;math;recursion
+CODING,Data Structures,MEDIUM,Longest Substring Without Repeating Characters (Microsoft),,,"Solve LeetCode problem 'Longest Substring Without Repeating Characters' (Topics: Hash Table, String, Sliding Window). Source: https://leetcode.com/problems/longest-substring-without-repeating-characters",return;hash;table;string;sliding
+CODING,Data Structures,MEDIUM,Longest Palindromic Substring (Microsoft),,,"Solve LeetCode problem 'Longest Palindromic Substring' (Topics: Two Pointers, String, Dynamic Programming, Manacher). Source: https://leetcode.com/problems/longest-palindromic-substring",return;two;pointers;string;dynamic
+CODING,Data Structures,EASY,Best Time to Buy and Sell Stock (Microsoft),,,"Solve LeetCode problem 'Best Time to Buy and Sell Stock' (Topics: Array, Dynamic Programming). Source: https://leetcode.com/problems/best-time-to-buy-and-sell-stock",return;array;dynamic;programming;best
+CODING,Data Structures,HARD,Trapping Rain Water (Microsoft),,,"Solve LeetCode problem 'Trapping Rain Water' (Topics: Array, Two Pointers, Dynamic Programming, Stack, Monotonic Stack). Source: https://leetcode.com/problems/trapping-rain-water",return;array;two;pointers;dynamic
+CODING,Data Structures,HARD,Median of Two Sorted Arrays (Microsoft),,,"Solve LeetCode problem 'Median of Two Sorted Arrays' (Topics: Array, Binary Search, Divide and Conquer). Source: https://leetcode.com/problems/median-of-two-sorted-arrays",return;array;binary;search;divide
+CODING,Data Structures,EASY,Palindrome Number (Microsoft),,,Solve LeetCode problem 'Palindrome Number' (Topics: Math). Source: https://leetcode.com/problems/palindrome-number,return;math;palindrome;number
+CODING,Data Structures,HARD,Merge k Sorted Lists (Microsoft),,,"Solve LeetCode problem 'Merge k Sorted Lists' (Topics: Linked List, Divide and Conquer, Heap (Priority Queue), Merge Sort, Tournament Sort). Source: https://leetcode.com/problems/merge-k-sorted-lists",return;linked;list;divide;and
+CODING,Data Structures,EASY,Two Sum (Amazon),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,HARD,Trapping Rain Water (Amazon),,,"Solve LeetCode problem 'Trapping Rain Water' (Topics: Array, Two Pointers, Dynamic Programming, Stack, Monotonic Stack). Source: https://leetcode.com/problems/trapping-rain-water",return;array;two;pointers;dynamic
+CODING,Data Structures,MEDIUM,LRU Cache (Amazon),,,"Solve LeetCode problem 'LRU Cache' (Topics: Hash Table, Linked List, Design, Doubly-Linked List). Source: https://leetcode.com/problems/lru-cache",return;hash;table;linked;list
+CODING,Data Structures,MEDIUM,Number of Islands (Amazon),,,"Solve LeetCode problem 'Number of Islands' (Topics: Array, Depth-First Search, Breadth-First Search, Union-Find, Matrix). Source: https://leetcode.com/problems/number-of-islands",return;array;depth;first;search
+CODING,Data Structures,MEDIUM,Longest Substring Without Repeating Characters (Amazon),,,"Solve LeetCode problem 'Longest Substring Without Repeating Characters' (Topics: Hash Table, String, Sliding Window). Source: https://leetcode.com/problems/longest-substring-without-repeating-characters",return;hash;table;string;sliding
+CODING,Data Structures,EASY,Best Time to Buy and Sell Stock (Amazon),,,"Solve LeetCode problem 'Best Time to Buy and Sell Stock' (Topics: Array, Dynamic Programming). Source: https://leetcode.com/problems/best-time-to-buy-and-sell-stock",return;array;dynamic;programming;best
+CODING,Data Structures,HARD,Median of Two Sorted Arrays (Amazon),,,"Solve LeetCode problem 'Median of Two Sorted Arrays' (Topics: Array, Binary Search, Divide and Conquer). Source: https://leetcode.com/problems/median-of-two-sorted-arrays",return;array;binary;search;divide
+CODING,Data Structures,EASY,Valid Parentheses (Amazon),,,"Solve LeetCode problem 'Valid Parentheses' (Topics: String, Stack, Bracket Sequences). Source: https://leetcode.com/problems/valid-parentheses",return;string;stack;bracket;sequences
+CODING,Data Structures,HARD,Merge k Sorted Lists (Amazon),,,"Solve LeetCode problem 'Merge k Sorted Lists' (Topics: Linked List, Divide and Conquer, Heap (Priority Queue), Merge Sort, Tournament Sort). Source: https://leetcode.com/problems/merge-k-sorted-lists",return;linked;list;divide;and
+CODING,Data Structures,MEDIUM,Rank Teams by Votes (Atlassian),,,"Solve LeetCode problem 'Rank Teams by Votes' (Topics: Array, Hash Table, String, Sorting, Counting). Source: https://leetcode.com/problems/rank-teams-by-votes",return;array;hash;table;string
+CODING,Data Structures,MEDIUM,Stock Price Fluctuation (Atlassian),,,"Solve LeetCode problem 'Stock Price Fluctuation' (Topics: Hash Table, Design, Heap (Priority Queue), Data Stream, Ordered Set). Source: https://leetcode.com/problems/stock-price-fluctuation",return;hash;table;design;heap
+CODING,Data Structures,HARD,All O`one Data Structure (Atlassian),,,"Solve LeetCode problem 'All O`one Data Structure' (Topics: Hash Table, Linked List, Design, Doubly-Linked List). Source: https://leetcode.com/problems/all-oone-data-structure",return;hash;table;linked;list
+CODING,Data Structures,MEDIUM,Design Snake Game (Atlassian),,,"Solve LeetCode problem 'Design Snake Game' (Topics: Array, Hash Table, Design, Queue, Simulation). Source: https://leetcode.com/problems/design-snake-game",return;array;hash;table;design
+CODING,Data Structures,EASY,Find the Width of Columns of a Grid (Atlassian),,,"Solve LeetCode problem 'Find the Width of Columns of a Grid' (Topics: Array, Matrix). Source: https://leetcode.com/problems/find-the-width-of-columns-of-a-grid",return;array;matrix;find;width
+CODING,Data Structures,HARD,Text Justification (Atlassian),,,"Solve LeetCode problem 'Text Justification' (Topics: Array, String, Simulation). Source: https://leetcode.com/problems/text-justification",return;array;string;simulation;text
+CODING,Data Structures,HARD,Number of Possible Sets of Closing Branches (Atlassian),,,"Solve LeetCode problem 'Number of Possible Sets of Closing Branches' (Topics: Bit Manipulation, Graph Theory, Heap (Priority Queue), Enumeration, Shortest Path). Source: https://leetcode.com/problems/number-of-possible-sets-of-closing-branches",return;bit;manipulation;graph;theory
+CODING,Data Structures,EASY,Best Time to Buy and Sell Stock (Atlassian),,,"Solve LeetCode problem 'Best Time to Buy and Sell Stock' (Topics: Array, Dynamic Programming). Source: https://leetcode.com/problems/best-time-to-buy-and-sell-stock",return;array;dynamic;programming;best
+CODING,Data Structures,EASY,Logger Rate Limiter (Atlassian),,,"Solve LeetCode problem 'Logger Rate Limiter' (Topics: Hash Table, Design, Data Stream). Source: https://leetcode.com/problems/logger-rate-limiter",return;hash;table;design;data
+CODING,Data Structures,HARD,Contain Virus (Flipkart),,,"Solve LeetCode problem 'Contain Virus' (Topics: Array, Depth-First Search, Breadth-First Search, Matrix, Simulation). Source: https://leetcode.com/problems/contain-virus",return;array;depth;first;search
+CODING,Data Structures,MEDIUM,Maximum Points You Can Obtain from Cards (Flipkart),,,"Solve LeetCode problem 'Maximum Points You Can Obtain from Cards' (Topics: Array, Sliding Window, Prefix Sum). Source: https://leetcode.com/problems/maximum-points-you-can-obtain-from-cards",return;array;sliding;window;prefix
+CODING,Data Structures,MEDIUM,Container With Most Water (Flipkart),,,"Solve LeetCode problem 'Container With Most Water' (Topics: Array, Two Pointers, Greedy). Source: https://leetcode.com/problems/container-with-most-water",return;array;two;pointers;greedy
+CODING,Data Structures,MEDIUM,Transform Array to All Equal Elements (Flipkart),,,"Solve LeetCode problem 'Transform Array to All Equal Elements' (Topics: Array, Greedy). Source: https://leetcode.com/problems/transform-array-to-all-equal-elements",return;array;greedy;transform;equal
+CODING,Data Structures,HARD,Design Movie Rental System (Flipkart),,,"Solve LeetCode problem 'Design Movie Rental System' (Topics: Array, Hash Table, Design, Heap (Priority Queue), Ordered Set). Source: https://leetcode.com/problems/design-movie-rental-system",return;array;hash;table;design
+CODING,Data Structures,EASY,Two Sum (Flipkart),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,HARD,The Score of Students Solving Math Expression (Flipkart),,,"Solve LeetCode problem 'The Score of Students Solving Math Expression' (Topics: Array, Hash Table, Math, String, Dynamic Programming, Stack, Memoization). Source: https://leetcode.com/problems/the-score-of-students-solving-math-expression",return;array;hash;table;math
+CODING,Data Structures,EASY,Find The Least Frequent Digit (Flipkart),,,"Solve LeetCode problem 'Find The Least Frequent Digit' (Topics: Array, Hash Table, Math, Counting). Source: https://leetcode.com/problems/find-the-least-frequent-digit",return;array;hash;table;math
+CODING,Data Structures,EASY,Next Greater Element I (Flipkart),,,"Solve LeetCode problem 'Next Greater Element I' (Topics: Array, Hash Table, Stack, Monotonic Stack). Source: https://leetcode.com/problems/next-greater-element-i",return;array;hash;table;stack
+CODING,Data Structures,EASY,Two Sum (Infosys),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,MEDIUM,Longest Substring Without Repeating Characters (Infosys),,,"Solve LeetCode problem 'Longest Substring Without Repeating Characters' (Topics: Hash Table, String, Sliding Window). Source: https://leetcode.com/problems/longest-substring-without-repeating-characters",return;hash;table;string;sliding
+CODING,Database,MEDIUM,Second Highest Salary (Infosys),,,Solve LeetCode problem 'Second Highest Salary' (Topics: Database). Source: https://leetcode.com/problems/second-highest-salary,return;database;second;highest;salary
+CODING,Data Structures,EASY,Best Time to Buy and Sell Stock (Infosys),,,"Solve LeetCode problem 'Best Time to Buy and Sell Stock' (Topics: Array, Dynamic Programming). Source: https://leetcode.com/problems/best-time-to-buy-and-sell-stock",return;array;dynamic;programming;best
+CODING,Data Structures,MEDIUM,Subarray Sum Equals K (Infosys),,,"Solve LeetCode problem 'Subarray Sum Equals K' (Topics: Array, Hash Table, Prefix Sum). Source: https://leetcode.com/problems/subarray-sum-equals-k",return;array;hash;table;prefix
+CODING,Data Structures,EASY,Lemonade Change (Infosys),,,"Solve LeetCode problem 'Lemonade Change' (Topics: Array, Greedy). Source: https://leetcode.com/problems/lemonade-change",return;array;greedy;lemonade;change
+CODING,Data Structures,HARD,Find the Number of Subsequences With Equal GCD (Infosys),,,"Solve LeetCode problem 'Find the Number of Subsequences With Equal GCD' (Topics: Array, Math, Dynamic Programming, Number Theory, Euclidean Algorithm, Greatest Common Divisor). Source: https://leetcode.com/problems/find-the-number-of-subsequences-with-equal-gcd",return;array;math;dynamic;programming
+CODING,Data Structures,HARD,Find Building Where Alice and Bob Can Meet (Infosys),,,"Solve LeetCode problem 'Find Building Where Alice and Bob Can Meet' (Topics: Array, Binary Search, Stack, Binary Indexed Tree, Segment Tree, Heap (Priority Queue), Monotonic Stack). Source: https://leetcode.com/problems/find-building-where-alice-and-bob-can-meet",return;array;binary;search;stack
+CODING,Data Structures,HARD,Stone Game VIII (Infosys),,,"Solve LeetCode problem 'Stone Game VIII' (Topics: Array, Math, Dynamic Programming, Minimax, Prefix Sum, Game Theory, Zero-Sum Game). Source: https://leetcode.com/problems/stone-game-viii",return;array;math;dynamic;programming
+CODING,Data Structures,EASY,Two Sum (TCS),,,"Solve LeetCode problem 'Two Sum' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/two-sum",return;array;hash;table
+CODING,Data Structures,MEDIUM,Longest Palindromic Substring (TCS),,,"Solve LeetCode problem 'Longest Palindromic Substring' (Topics: Two Pointers, String, Dynamic Programming, Manacher). Source: https://leetcode.com/problems/longest-palindromic-substring",return;two;pointers;string;dynamic
+CODING,Data Structures,EASY,Palindrome Number (TCS),,,Solve LeetCode problem 'Palindrome Number' (Topics: Math). Source: https://leetcode.com/problems/palindrome-number,return;math;palindrome;number
+CODING,Data Structures,MEDIUM,Maximum Subarray (TCS),,,"Solve LeetCode problem 'Maximum Subarray' (Topics: Array, Divide and Conquer, Dynamic Programming). Source: https://leetcode.com/problems/maximum-subarray",return;array;divide;and;conquer
+CODING,Data Structures,MEDIUM,Container With Most Water (TCS),,,"Solve LeetCode problem 'Container With Most Water' (Topics: Array, Two Pointers, Greedy). Source: https://leetcode.com/problems/container-with-most-water",return;array;two;pointers;greedy
+CODING,Data Structures,EASY,Move Zeroes (TCS),,,"Solve LeetCode problem 'Move Zeroes' (Topics: Array, Two Pointers). Source: https://leetcode.com/problems/move-zeroes",return;array;two;pointers;move
+CODING,Data Structures,HARD,First Missing Positive (TCS),,,"Solve LeetCode problem 'First Missing Positive' (Topics: Array, Hash Table). Source: https://leetcode.com/problems/first-missing-positive",return;array;hash;table;first
+CODING,Data Structures,HARD,Median of Two Sorted Arrays (TCS),,,"Solve LeetCode problem 'Median of Two Sorted Arrays' (Topics: Array, Binary Search, Divide and Conquer). Source: https://leetcode.com/problems/median-of-two-sorted-arrays",return;array;binary;search;divide
+CODING,Data Structures,HARD,Palindrome Partitioning IV (TCS),,,"Solve LeetCode problem 'Palindrome Partitioning IV' (Topics: String, Dynamic Programming). Source: https://leetcode.com/problems/palindrome-partitioning-iv",return;string;dynamic;programming;palindrome
+HR,Communication,EASY,Why do you want to work for X company?,,,,team;situation;action;result;communication
+HR,Communication,MEDIUM,Why do you want to leave your current/last company?,,,,leave;current;last;team;situation
+HR,Communication,HARD,What are you looking for in your next role?,,,,looking;next;role;team;situation
+HR,Communication,EASY,Tell me about a time when you had a conflict with a co-worker.,,,,conflict;worker;team;situation;action
+HR,Communication,MEDIUM,Tell me about a time in which you had a conflict and needed to influence somebody else.,,,,conflict;needed;influence;somebody;else
+HR,Communication,HARD,What project are you currently working on?,,,,project;currently;working;team;situation
+HR,Communication,EASY,What is the most challenging aspect of your current project?,,,,challenging;aspect;current;project;team
+HR,Communication,MEDIUM,What was the most difficult bug that you fixed in the past 6 months?,,,,difficult;fixed;past;months;team
+HR,Communication,HARD,"How do you tackle challenges? Name a difficult challenge you faced while working on a project, how you overcame it, and what you learned.",,,,tackle;challenges;name;difficult;challenge
+HR,Communication,EASY,What are you excited about?,,,,excited;team;situation;action;result
+HR,Communication,MEDIUM,What frustrates you?,,,,frustrates;team;situation;action;result
+HR,Communication,HARD,Imagine it is your first day here at the company. What do you want to work on? What features would you improve on?,,,,imagine;first;here;features;improve
+HR,Communication,EASY,What are the most interesting projects you have worked on and how might they be relevant to this company's environment?,,,,interesting;projects;worked;might;they
+HR,Communication,MEDIUM,Tell me about a time you had a disagreement with your manager.,,,,disagreement;manager;team;situation;action
+HR,Communication,HARD,"Talk about a project you are most passionate about, or one where you did your best work.",,,,talk;project;passionate;best;team
+HR,Communication,EASY,What does your best day of work look like?,,,,does;best;look;like;team
+HR,Communication,MEDIUM,What is something that you had to push for in your previous projects?,,,,something;push;previous;projects;team
+HR,Communication,HARD,What is the most constructive feedback you have received in your career?,,,,constructive;feedback;received;career;team
+HR,Communication,EASY,What is something you had to persevere at for multiple months?,,,,something;persevere;multiple;months;team
+HR,Communication,MEDIUM,Tell me about a time you met a tight deadline.,,,,tight;deadline;team;situation;action
+HR,Communication,HARD,"If this were your first annual review with our company, what would I be telling you right now?",,,,first;annual;review;telling;right
+HR,Communication,EASY,Time management has become a necessary factor in productivity. Give an example of a time-management skill you've learned and applied at work.,,,,management;become;necessary;factor;productivity
+HR,Communication,MEDIUM,Tell me about a problem you've had getting along with a work associate.,,,,problem;getting;along;associate;team
+HR,Communication,HARD,What aspects of your work are most often criticized?,,,,aspects;often;criticized;team;situation
+HR,Communication,EASY,How have you handled criticism of your work?,,,,handled;criticism;team;situation;action
+HR,Communication,MEDIUM,What strengths do you think are most important for your job position?,,,,strengths;think;important;position;team
+HR,Communication,HARD,What words would your colleagues use to describe you?,,,,words;colleagues;team;situation;action
+HR,Communication,EASY,What would you hope to achieve in the first six months after being hired?,,,,hope;achieve;first;months;after
+HR,Communication,MEDIUM,Tell me why you will be a good fit for the position.,,,,will;good;position;team;situation

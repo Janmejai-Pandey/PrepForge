@@ -67,5 +67,7 @@ public class StorageManager {
             }
         }
         currentState = new PersistentState();
+        DataSeeder.seed(currentState);
+        saveState();
     }
 }

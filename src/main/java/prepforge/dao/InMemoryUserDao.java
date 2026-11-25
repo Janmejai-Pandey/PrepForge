@@ -15,25 +15,6 @@ public class InMemoryUserDao implements UserDao {
 
     public InMemoryUserDao() {
         this.state = StorageManager.getState();
-        if (state.skillCatalog.isEmpty()) {
-            seedDefaultSkills();
-        }
-    }
-
-    private void seedDefaultSkills() {
-        addCatalogSkill("Java", "Programming");
-        addCatalogSkill("Python", "Programming");
-        addCatalogSkill("SQL", "Database");
-        addCatalogSkill("Spring Boot", "Backend");
-        addCatalogSkill("React", "Frontend");
-        addCatalogSkill("Data Structures", "Core CS");
-        StorageManager.saveState();
-    }
-
-    private void addCatalogSkill(String name, String category) {
-        Skill skill = new Skill(state.nextSkillId, name, category);
-        state.skillCatalog.put(state.nextSkillId, skill);
-        state.nextSkillId++;
     }
 
     @Override
