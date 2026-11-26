@@ -18,7 +18,7 @@ public abstract class Interview implements java.io.Serializable {
     private int id;
     private final int studentId;
     private final String difficulty;
-    private final LocalDateTime startedAt;
+    private LocalDateTime startedAt;
     private String status = IN_PROGRESS;
 
     private final List<Question> questions = new ArrayList<>();
@@ -166,6 +166,19 @@ public abstract class Interview implements java.io.Serializable {
 
     public Map<Integer, Double> getAllMarks() {
         return Collections.unmodifiableMap(marks);
+    }
+
+    public void restoreState(List<Question> restoredQuestions, Map<Integer, String> restoredAnswers,
+                             Map<Integer, Double> restoredMarks, LocalDateTime restoredStartedAt) {
+        questions.clear();
+        questions.addAll(restoredQuestions);
+        answers.clear();
+        answers.putAll(restoredAnswers);
+        marks.clear();
+        marks.putAll(restoredMarks);
+        if (restoredStartedAt != null) {
+            startedAt = restoredStartedAt;
+        }
     }
 
     @Override

@@ -1,9 +1,0 @@
-application_id,student_email,role_id,status
-1,aarav@prepforge.com,1,SHORTLISTED
-2,aarav@prepforge.com,5,APPLIED
-3,diya@prepforge.com,1,SELECTED
-4,diya@prepforge.com,3,SHORTLISTED
-5,kabir@prepforge.com,7,APPLIED
-6,ananya@prepforge.com,5,SHORTLISTED
-7,meera@prepforge.com,1,SELECTED
-8,vikram@prepforge.com,10,REJECTED

@@ -1,8 +1,0 @@
-company_id,name,description,location,industry
-1,Google,"Global technology leader in search, cloud, and AI","Mountain View, CA",Technology
-2,Microsoft,Global enterprise software and Azure cloud leader,"Redmond, WA",Cloud & Software
-3,Amazon,Global e-commerce and AWS cloud computing pioneer,"Seattle, WA",E-Commerce & Cloud
-4,Atlassian,Collaboration and developer workflow software,"Bengaluru, India",Enterprise Software
-5,Flipkart,Leading Indian e-commerce technology marketplace,"Bengaluru, India",E-Commerce
-6,Infosys,Global digital transformation and IT services,"Bengaluru, India",IT Consulting
-7,TCS,Global IT consulting and enterprise engineering,"Mumbai, India",IT Consulting

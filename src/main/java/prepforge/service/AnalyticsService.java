@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import prepforge.dao.InMemoryInterviewDao;
 import prepforge.dao.InterviewDao;
+import prepforge.dao.MySqlDataStore;
 import prepforge.exception.PrepForgeException;
 import prepforge.exception.ValidationException;
 
@@ -16,7 +16,7 @@ public class AnalyticsService {
     private final InterviewDao interviewDao;
 
     public AnalyticsService() {
-        this(new InMemoryInterviewDao());
+        this(new MySqlDataStore());
     }
 
     public AnalyticsService(InterviewDao interviewDao) {

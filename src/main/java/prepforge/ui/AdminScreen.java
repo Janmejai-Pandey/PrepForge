@@ -179,11 +179,7 @@ public class AdminScreen {
             new Thread(task).start();
         });
 
-        Button exportCsvBtn = new Button("Export Roster to CSV");
-        exportCsvBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
-        exportCsvBtn.setOnAction(e -> exportStudentsToCsv());
-
-        header.getChildren().addAll(title, spacer, refreshBtn, exportCsvBtn, deleteBtn);
+        header.getChildren().addAll(title, spacer, refreshBtn, deleteBtn);
 
         studentsTable = new TableView<>();
         studentsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -815,35 +811,6 @@ public class AdminScreen {
         public String getRequiredSkillsStr() { return requiredSkillsStr; }
     }
 
-    private void exportStudentsToCsv() {
-        if (studentsTable == null || studentsTable.getItems().isEmpty()) {
-            mainApp.showAlert(Alert.AlertType.WARNING, "No Data", "No student records available to export.");
-            return;
-        }
-        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Export Student Roster to CSV");
-        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files (*.csv)", "*.csv"));
-        fileChooser.setInitialFileName("PrepForge_Student_Roster.csv");
-        java.io.File file = fileChooser.showSaveDialog(null);
-        if (file != null) {
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(file))) {
-                writer.println("Student ID,Full Name,Email,Enrollment No,Branch,CGPA");
-                for (Student s : studentsTable.getItems()) {
-                    writer.printf("%d,\"%s\",\"%s\",\"%s\",\"%s\",%.2f%n",
-                            s.getId(),
-                            s.getName().replace("\"", "\"\""),
-                            s.getEmail().replace("\"", "\"\""),
-                            s.getEnrollmentNumber().replace("\"", "\"\""),
-                            s.getBranch().replace("\"", "\"\""),
-                            s.getCgpa());
-                }
-                mainApp.showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Candidate roster exported to " + file.getName());
-            } catch (java.io.IOException ex) {
-                mainApp.showAlert(Alert.AlertType.ERROR, "Export Failed", "Failed to write CSV: " + ex.getMessage());
-            }
-        }
-    }
-
     private Parent buildApplicationsTab() {
         VBox container = new VBox(16);
         container.setPadding(new Insets(24));
@@ -875,11 +842,7 @@ public class AdminScreen {
         rejectBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
         rejectBtn.setOnAction(e -> updateSelectedAppStatus("REJECTED"));
 
-        Button exportBtn = new Button("Export CSV");
-        exportBtn.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
-        exportBtn.setOnAction(e -> exportApplicationsToCsv());
-
-        header.getChildren().addAll(title, spacer, refreshBtn, shortlistBtn, selectBtn, rejectBtn, exportBtn);
+        header.getChildren().addAll(title, spacer, refreshBtn, shortlistBtn, selectBtn, rejectBtn);
 
         applicationsTable = new TableView<>();
         applicationsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -962,35 +925,4 @@ public class AdminScreen {
         new Thread(task).start();
     }
 
-    private void exportApplicationsToCsv() {
-        if (applicationsTable == null || applicationsTable.getItems().isEmpty()) {
-            mainApp.showAlert(Alert.AlertType.WARNING, "No Data", "No application records available to export.");
-            return;
-        }
-        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Export Applications to CSV");
-        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files (*.csv)", "*.csv"));
-        fileChooser.setInitialFileName("PrepForge_Applications.csv");
-        java.io.File file = fileChooser.showSaveDialog(null);
-        if (file != null) {
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(file))) {
-                writer.println("Application ID,Candidate Name,Email,Branch,CGPA,Company,Role,Status,Applied At");
-                for (ApplicationRecord a : applicationsTable.getItems()) {
-                    writer.printf("%d,\"%s\",\"%s\",\"%s\",%.2f,\"%s\",\"%s\",\"%s\",\"%s\"%n",
-                            a.getApplicationId(),
-                            a.getStudentName().replace("\"", "\"\""),
-                            a.getStudentEmail().replace("\"", "\"\""),
-                            a.getBranch().replace("\"", "\"\""),
-                            a.getCgpa(),
-                            a.getCompanyName().replace("\"", "\"\""),
-                            a.getRoleTitle().replace("\"", "\"\""),
-                            a.getStatus(),
-                            a.getAppliedAt() != null ? a.getAppliedAt().toString() : "");
-                }
-                mainApp.showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Applications exported to " + file.getName());
-            } catch (java.io.IOException ex) {
-                mainApp.showAlert(Alert.AlertType.ERROR, "Export Failed", "Failed to write CSV: " + ex.getMessage());
-            }
-        }
-    }
 }

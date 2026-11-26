@@ -12,8 +12,8 @@ Presentation Layer (JavaFX UI) -> Service / Business Layer -> Data Access Layer 
 1. Separation of Concerns:
    - UI Layer (`prepforge.ui`): Written purely in Java without FXML. Contains no SQL queries. Database and service operations execute within JavaFX `Task<T>` workers to keep the UI thread responsive.
    - Service Layer (`prepforge.service`): Contains business logic, input validation, password hashing, placement eligibility checks, interview assessment engines, and diagnostic analytics. Interacts with persistence exclusively through DAO interfaces.
-   - DAO Layer (`prepforge.dao`): Encapsulates data persistence. Thread-safe in-memory and database implementations translate low-level SQL exceptions into checked `DataAccessException` to isolate domain and UI layers.
-   - Database Layer (`database/`): Relational MySQL schema in Third Normal Form (3NF), backed by views, stored procedures, functions, triggers, and transactional locking.
+   - DAO Layer (`prepforge.dao`): Encapsulates MySQL persistence and translates low-level SQL exceptions into checked `DataAccessException` to isolate domain and UI layers.
+   - Database Layer (`src/main/resources/db/`): MySQL schema, SQL seed data, and transactional persistence for users, placement records, questions, interviews, answers, and results.
 
 2. Object-Oriented Principles:
    - Encapsulation: Private fields with public accessors and mutators across all domain entities.
@@ -32,7 +32,7 @@ Presentation Layer (JavaFX UI) -> Service / Business Layer -> Data Access Layer 
 | Module | Owner / Role | Primary Responsibilities | Status |
 |---|---|---|---|
 | Member 1 | OOP & User Management | `User`, `Student`, `Admin`, `Skill`, `Company`, `JobRole`, `ApplicationRecord`, `UserService`, `PlacementService`, `Validator`, `PasswordHasher`, and Exception hierarchy | Complete |
-| Member 2 | Database & DAOs | Relational schema (`schema.sql`), views, stored procedure, function, triggers (`advanced.sql`), ER diagram (`er-diagram.png`), `DBConnection`, `StorageManager`, `DataSeeder`, `UserDao`, `CompanyDao`, `QuestionDao`, `InterviewDao`, and In-Memory DAO implementations | Complete |
+| Member 2 | Database & DAOs | Relational schema, MySQL connection setup, SQL seed data, and JDBC implementations of `UserDao`, `CompanyDao`, `QuestionDao`, and `InterviewDao` | Complete |
 | Member 3 | Interviews & Analytics | `Interview`, `TechnicalInterview`, `HRInterview`, `MockInterview`, `Question`, `MCQQuestion`, `TechnicalQuestion`, `CodingQuestion`, `HRQuestion`, `Result`, `Evaluator`, `MCQEvaluator`, `KeywordEvaluator`, `InterviewService`, `AnalyticsService` | Complete |
 | Member 4 | UI & Integration | Maven build (`pom.xml`, `.gitignore`), JavaFX desktop application (`Main`, `LoginScreen`, `StudentScreen` [5 tabs], `AdminScreen` [5 tabs], `InterviewScreen`), system integration | Complete |
 
@@ -54,9 +54,9 @@ The database schema is normalized to Third Normal Form (3NF) to eliminate data r
 
 ## 4. Data Sources & External Dataset Attribution
 
-PrepForge does not hardcode question banks or corporate/student datasets inside Java source files. Instead, `DataSeeder` loads external CSV datasets from `src/main/resources/data/` (`questions.csv`, `skills.csv`, `companies.csv`, `job_roles.csv`, `users.csv`, `applications.csv`) on initial startup and persists changes locally via `StorageManager` (`prepforge_state.dat`).
+PrepForge stores all live application data in the local MySQL database `prepforge`; CSV and serialized files are not used for ongoing storage. On the first launch, the application creates the database tables and imports the sample records from `src/main/resources/db/seed.sql`. If a previous `prepforge_state.dat` exists, the application migrates its records into MySQL and removes that legacy file only after migration succeeds.
 
-The 240 assessment questions in `src/main/resources/data/questions.csv` are collected from the following verified open-source datasets and public APIs:
+The 240 assessment questions in the SQL seed are collected from the following verified open-source datasets and public APIs:
 
 | Question Category | Count | Source Name | Source Link | License |
 |---|---|---|---|---|
@@ -68,9 +68,20 @@ The 240 assessment questions in `src/main/resources/data/questions.csv` are coll
 ## 5. Build & Execution Instructions
 
 ### Prerequisites
-- Java Development Kit (JDK) 17 or higher
+- Java Development Kit (JDK) 25 or higher
 - Apache Maven 3.8+ or higher
-- MySQL Community Server 8.0+ (Optional; in-memory DAOs provide zero-dependency standalone execution)
+- MySQL Community Server 8.0+
+
+### Configure MySQL
+The application creates the `prepforge` database and its tables on first launch. The configured MySQL account must be able to create databases. Copy the example configuration and set the password for your local MySQL account:
+
+```powershell
+Copy-Item src\main\resources\db.properties.example src\main\resources\db.properties
+```
+
+Edit `src/main/resources/db.properties`, or set `PREPFORGE_DB_URL`, `PREPFORGE_DB_USER`, and `PREPFORGE_DB_PASSWORD` environment variables. The defaults connect to `localhost:3306` as `root` with an empty password. Keep local credentials out of version control.
+
+The startup migration does not drop existing tables. If an existing `prepforge` database uses a different schema, back it up and migrate or recreate it before starting the application.
 
 ### Compile Project
 ```bash

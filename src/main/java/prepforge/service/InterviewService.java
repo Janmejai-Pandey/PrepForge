@@ -1,9 +1,8 @@
 package prepforge.service;
 
 import java.util.List;
-import prepforge.dao.InMemoryInterviewDao;
-import prepforge.dao.InMemoryQuestionDao;
 import prepforge.dao.InterviewDao;
+import prepforge.dao.MySqlDataStore;
 import prepforge.dao.QuestionDao;
 import prepforge.evaluator.Evaluator;
 import prepforge.exception.PrepForgeException;
@@ -23,7 +22,7 @@ public class InterviewService {
     private final InterviewDao interviewDao;
 
     public InterviewService() {
-        this(new InMemoryQuestionDao(), new InMemoryInterviewDao());
+        this(new MySqlDataStore(), new MySqlDataStore());
     }
 
     public InterviewService(QuestionDao questionDao, InterviewDao interviewDao) {

@@ -1,12 +1,10 @@
 package prepforge.util;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
 import prepforge.model.*;
 
 public class StorageManager {
-
-    private static final String FILE_NAME = "prepforge_state.dat";
 
     public static class PersistentState implements Serializable {
         private static final long serialVersionUID = 1L;
@@ -37,37 +35,4 @@ public class StorageManager {
         public int nextResultId = 500;
     }
 
-    private static PersistentState currentState = null;
-
-    public static synchronized PersistentState getState() {
-        if (currentState == null) {
-            loadState();
-        }
-        return currentState;
-    }
-
-    public static synchronized void saveState() {
-        if (currentState == null) return;
-        File file = new File(FILE_NAME);
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-            oos.writeObject(currentState);
-        } catch (Exception e) {
-            System.err.println("Failed to persist state: " + e.getMessage());
-        }
-    }
-
-    private static synchronized void loadState() {
-        File file = new File(FILE_NAME);
-        if (file.exists() && file.length() > 0) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                currentState = (PersistentState) ois.readObject();
-                return;
-            } catch (Exception e) {
-                System.err.println("Could not load saved state, seeding fresh defaults: " + e.getMessage());
-            }
-        }
-        currentState = new PersistentState();
-        DataSeeder.seed(currentState);
-        saveState();
-    }
 }

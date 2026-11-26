@@ -1,7 +1,7 @@
 package prepforge.service;
 
 import java.util.List;
-import prepforge.dao.InMemoryUserDao;
+import prepforge.dao.MySqlDataStore;
 import prepforge.dao.UserDao;
 import prepforge.exception.DataAccessException;
 import prepforge.exception.PrepForgeException;
@@ -18,7 +18,7 @@ public class UserService {
     private final UserDao userDao;
 
     public UserService() {
-        this.userDao = new InMemoryUserDao();
+        this.userDao = new MySqlDataStore();
     }
 
     public UserService(UserDao userDao) {

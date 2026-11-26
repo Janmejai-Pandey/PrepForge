@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import prepforge.dao.CompanyDao;
-import prepforge.dao.InMemoryCompanyDao;
-import prepforge.dao.InMemoryUserDao;
+import prepforge.dao.MySqlDataStore;
 import prepforge.dao.UserDao;
 import prepforge.exception.PrepForgeException;
 import prepforge.exception.ValidationException;
@@ -22,8 +21,9 @@ public class PlacementService {
     private final UserDao userDao;
 
     public PlacementService() {
-        this.companyDao = new InMemoryCompanyDao();
-        this.userDao = new InMemoryUserDao();
+        MySqlDataStore dataStore = new MySqlDataStore();
+        this.companyDao = dataStore;
+        this.userDao = dataStore;
     }
 
     public PlacementService(CompanyDao companyDao, UserDao userDao) {

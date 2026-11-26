@@ -18,6 +18,8 @@ import prepforge.ui.AdminScreen;
 import prepforge.ui.InterviewScreen;
 import prepforge.ui.LoginScreen;
 import prepforge.ui.StudentScreen;
+import prepforge.dao.MySqlDataStore;
+import prepforge.util.DBConnection;
 
 public class Main extends Application {
 
@@ -31,15 +33,13 @@ public class Main extends Application {
     @Override
     public void init() throws Exception {
         super.init();
-        prepforge.dao.InMemoryUserDao userDao = new prepforge.dao.InMemoryUserDao();
-        prepforge.dao.InMemoryCompanyDao companyDao = new prepforge.dao.InMemoryCompanyDao();
-        prepforge.dao.InMemoryQuestionDao questionDao = new prepforge.dao.InMemoryQuestionDao();
-        prepforge.dao.InMemoryInterviewDao interviewDao = new prepforge.dao.InMemoryInterviewDao();
+        DBConnection.initializeDatabase();
+        MySqlDataStore dataStore = new MySqlDataStore();
 
-        this.userService = new UserService(userDao);
-        this.placementService = new PlacementService(companyDao, userDao);
-        this.interviewService = new InterviewService(questionDao, interviewDao);
-        this.analyticsService = new AnalyticsService(interviewDao);
+        this.userService = new UserService(dataStore);
+        this.placementService = new PlacementService(dataStore, dataStore);
+        this.interviewService = new InterviewService(dataStore, dataStore);
+        this.analyticsService = new AnalyticsService(dataStore);
     }
 
     @Override
