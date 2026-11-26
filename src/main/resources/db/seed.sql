@@ -1,4 +1,3 @@
--- Generated from the original sample datasets; imported only when the database has no seed marker.
 INSERT INTO skills (skill_id, skill_name, category) VALUES (1, 'JavaScript', 'Programming');
 INSERT INTO skills (skill_id, skill_name, category) VALUES (2, 'React', 'Frontend');
 INSERT INTO skills (skill_id, skill_name, category) VALUES (3, 'Node.js', 'Backend');
